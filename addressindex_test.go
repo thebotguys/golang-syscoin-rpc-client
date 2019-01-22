@@ -62,7 +62,7 @@ func TestGetAddressBalanceOK(t *testing.T) {
 	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
 
 	testAddresses := []string{"SU8UsT1LLMR8XvFFehbovp1L4P51xmnetr", "Saqi3gtjyVEndehH4PWc7bRR4ayzAZhrnj", "ShmVjaK4bW2LfhbMyx253QvyDbjD1h71yx"}
-	testSeparatedOutput := false
+	testSeparatedOutput := true
 
 	bal, err := cl.AddressIndex.GetAddressBalance(testAddresses, testSeparatedOutput)
 	require.NoError(t, err, "Must not error on valid URL, check if the node is running")
