@@ -54,3 +54,118 @@ func main() {
 ## Additional Notes
 
 Full Reference is available at [https://syscoin.readme.io/v3.2.0/reference](https://syscoin.readme.io/v3.2.0/reference).
+
+## Currently Implemented commands
+
+### Addressindex commands (require -addressindex enabled on rpc server)
+
+- [x] `getaddressbalance`
+- [x] `getaddressdeltas`
+- [x] `getaddressmempool`
+- [x] `getaddresstxids`
+- [x] `getaddressutxos`
+
+### Blockchainindex commands (require -blockchainindex enabled on rpc server)
+
+- [x] `getbestblockhash`
+- [x] `getblock`
+- [x] `getblockchaininfo`
+- [x] `getblockcount`
+- [x] `getblockhash`
+- [x] `getblockhashes`
+- [x] `getblockheader`
+- [x] `getblockheaders`
+- [x] `getchaintips`
+- [x] `getdifficulty`
+- [x] `getmempoolancestors`
+- [x] `getmempooldescendants`
+- [x] `getmempoolentry`
+- [x] `getmempoolinfo`
+- [x] `getrawmempool`
+- [x] `getspentinfo`
+- [x] `gettxout`
+- [x] `gettxoutproof`
+- [x] `gettxoutsetinfo`
+- [x] `preciousblock`
+- [x] `pruneblockchain`
+- [x] `verifychain`
+- [x] `verifytxoutproof`
+
+### Control commands
+
+- [ ] `debug`
+- [ ] `help`
+- [ ] `getinfo` (**DEPRECATED**)
+- [ ] `getmemoryinfo`
+- [ ] `stop`
+
+### Generating commands
+
+- [ ] `generate`
+- [ ] `generatetoaddress`
+
+### Mining commands
+
+- [ ] `createauxblock`
+- [ ] `getauxblock`
+- [ ] `getblocktemplate`
+- [ ] `getmininginfo`
+- [ ] `getnetworkhashps`
+- [ ] `prioritisetransaction`
+- [ ] `submitauxblock`
+- [ ] `submitblock`
+
+### Network commands
+
+- [ ] `addnode`
+- [ ] `clearbanned`
+- [ ] `disconnectnode`
+- [ ] `getaddednodeinfo`
+- [ ] `getconnectioncount`
+- [ ] `getnettotals`
+- [ ] `getnetworkinfo`
+- [ ] `getpeerinfo`
+- [ ] `listbanned`
+- [ ] `ping`
+- [ ] `setban`
+- [ ] `setnetworkactive`
+
+### RawTransaction commands
+
+- [ ] `createrawtransaction`
+- [ ] `decoderawtransaction`
+- [ ] `decodescript`
+- [ ] `fundrawtransaction`
+- [ ] `getrawtransaction`
+- [ ] `sendrawtransaction`
+- [ ] `signrawtransaction`
+
+### Syscoin commands
+
+- [ ] `getgovernanceinfo`
+- [ ] `getpoolinfo`
+- [ ] `getsuperblockbudget`
+- [ ] `gobject`
+- [ ] `masternode`
+- [ ] `masternodebroadcast`
+- [ ] `masternodelist`
+- [ ] `mnsync`
+- [ ] `privatesend`
+- [ ] `sentinelping`
+- [ ] `spork`
+- [ ] `voteraw`
+
+### Util commands
+
+- [ ] `createmultisig`
+- [ ] `estimatefee`
+- [ ] `estimatepriority`
+- [ ] `estimatesmartfee`
+- [ ] `estimatesmartpriority`
+- [ ] `signmessagewithprivkey`
+- [ ] `validateaddress`
+- [ ] `verifymessage`
+
+### Wallet commands
+
+#### TBD
