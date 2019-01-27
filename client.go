@@ -16,8 +16,10 @@ type Client struct {
 	user            string                 // The RPC Username.
 	pass            string                 // The RPC Password.
 	httpClient      *http.Client           // The JSON-RPC over HTTP sub client.
-	AddressIndex    *addressIndexClient    // The client of addressindex calls.
-	BlockchainIndex *blockchainIndexClient // The client of blockchaindex calls.
+	AddressIndex    *addressIndexClient    // The client of `addressindex` calls.
+	BlockchainIndex *blockchainIndexClient // The client of `blockchaindex` calls.
+	Control         *controlClient         // The client of `control` calls.
+	Generating      *generatingClient      // The client of `generating` calls.
 }
 
 // NewClient creates a new client object.
@@ -31,6 +33,8 @@ func NewClient(url string, rpcUser string, rpcPassword string) (*Client, error) 
 
 	cl.AddressIndex = &addressIndexClient{cl}
 	cl.BlockchainIndex = &blockchainIndexClient{cl}
+	cl.Control = &controlClient{cl}
+	cl.Generating = &generatingClient{cl}
 
 	return cl, nil
 }

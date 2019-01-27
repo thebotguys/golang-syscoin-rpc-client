@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-// addressIndexClient wraps all addressindex related functions.
+// addressIndexClient wraps all `addressindex` related functions.
 type addressIndexClient struct {
 	c *Client // The binded client, must not be nil.
 }

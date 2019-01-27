@@ -93,16 +93,16 @@ Full Reference is available at [https://syscoin.readme.io/v3.2.0/reference](http
 
 ### Control commands
 
-- [ ] `debug`
-- [ ] `help`
-- [ ] `getinfo` (**DEPRECATED**)
-- [ ] `getmemoryinfo`
-- [ ] `stop`
+- [x] `debug`
+- [x] `help`
+- [ ] `getinfo` (**DEPRECATED, NOT IMPLEMENTED**)
+- [x] `getmemoryinfo`
+- [x] `stop`
 
 ### Generating commands
 
-- [ ] `generate`
-- [ ] `generatetoaddress`
+- [x] `generate`
+- [x] `generatetoaddress`
 
 ### Mining commands
 

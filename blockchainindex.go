@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-// blockchainIndexClient wraps all addressindex related functions.
+// blockchainIndexClient wraps all `blockchainindex` related functions.
 type blockchainIndexClient struct {
 	c *Client // The binded client, must not be nil.
 }
