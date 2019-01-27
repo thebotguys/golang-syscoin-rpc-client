@@ -11,10 +11,10 @@ import (
 
 // jsonRPCrequest represents a generic JSON RPC request.
 type jsonRPCrequest struct {
-	JSONRpcVersion string          `json:"jsonrpc,required"`
-	Method         string          `json:"method,required"`
-	Params         json.RawMessage `json:"params,required"`
-	ID             string          `json:"id,required"`
+	JSONRpcVersion string      `json:"jsonrpc,required"`
+	Method         string      `json:"method,required"`
+	Params         interface{} `json:"params,required"`
+	ID             string      `json:"id,required"`
 }
 
 // jsonRPCrequest represents a generic JSON RPC response.
@@ -37,16 +37,11 @@ func (err *errorMessage) Error() string {
 //     url   : The endpoint url.
 //     method: The name of the method which is going to be called.
 //     params: The JSON object representing all the params.
-func (c *Client) do(url string, method string, params interface{} /*json.Marshaler*/) (json.RawMessage, error) {
-	jsonParams, err := json.Marshal([]interface{}{params})
-	if err != nil {
-		return nil, err
-	}
-
+func (c *Client) do(method string, params ...interface{} /*json.Marshaler*/) (json.RawMessage, error) {
 	jsonReq := jsonRPCrequest{
 		JSONRpcVersion: "1.0",
 		Method:         method,
-		Params:         jsonParams,
+		Params:         params,
 		ID:             uuid.NewV4().String(),
 	}
 
@@ -55,7 +50,7 @@ func (c *Client) do(url string, method string, params interface{} /*json.Marshal
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest("POST", c.url, bytes.NewBuffer(reqBody))
 	if err != nil {
 		return nil, err
 	}

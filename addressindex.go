@@ -2,21 +2,21 @@ package syscoinrpc
 
 import (
 	"encoding/json"
-	"time"
 )
 
-// addressIndexClient wraps all addressindex related functions.
+// addressIndexClient wraps all `addressindex` related functions.
 type addressIndexClient struct {
 	c *Client // The binded client, must not be nil.
+}
+
+func (aic *addressIndexClient) do(method string, params ...interface{}) (json.RawMessage, error) {
+	return aic.c.do(method, params...)
 }
 
 // getAddressBalancePayload represents the payload of a `getAddressBalance` call.
 type getAddressBalancePayload struct {
 	// Addresses is the list of the base58check encoded addresses.
 	Addresses []string `json:"addresses,required"`
-	// SeparatedOutput if set to true, will return balances of the addresses passed
-	// in as an array instead of the summed balance. Default is false.
-	SeparatedOutput bool `json:"separated_output,omitempty"`
 }
 
 // addressBalance represents a GetAddressBalance response.
@@ -32,12 +32,11 @@ type addressBalance struct {
 //                       the summed balance [Optional]
 func (aic *addressIndexClient) GetAddressBalance(addresses []string, separatedOutput bool) (*addressBalance, error) {
 	payload := getAddressBalancePayload{
-		Addresses:       addresses,
-		SeparatedOutput: separatedOutput,
+		Addresses: addresses,
 	}
 
 	var response addressBalance
-	res, err := aic.c.do(aic.c.url, "getaddressbalance", payload)
+	res, err := aic.do("getaddressbalance", payload)
 	if err != nil {
 		return nil, err
 	}
@@ -59,11 +58,8 @@ type getAddressDeltasPayload struct {
 	End int `json:"end,omitempty"`
 }
 
-// addressDeltas represents a GetAddressDeltas response.
-type addressDeltas []addressDelta
-
-// addressDelta represents a single address delta.
-type addressDelta struct {
+// AddressDelta represents a single address delta.
+type AddressDelta struct {
 	// Satoshis is the difference of satoshis.
 	Satoshis int `json:"satoshis,required"`
 	// TxID is the related txid
@@ -82,15 +78,15 @@ type addressDelta struct {
 //     addresses: The array of base58check encoded addresses
 //     start    : The start block height [Optional]
 //     end      : The end block height   [Optional]
-func (aic *addressIndexClient) GetAddressDeltas(addresses []string, start int, end int) (addressDeltas, error) {
+func (aic *addressIndexClient) GetAddressDeltas(addresses []string, start int, end int) ([]*AddressDelta, error) {
 	payload := getAddressDeltasPayload{
 		Addresses: addresses,
 		Start:     start,
 		End:       end,
 	}
 
-	var response addressDeltas
-	res, err := aic.c.do(aic.c.url, "getaddressdeltas", payload)
+	var response []*AddressDelta
+	res, err := aic.do("getaddressdeltas", payload)
 	if err != nil {
 		return nil, err
 	}
@@ -108,11 +104,8 @@ type getAddressMemPoolPayload struct {
 	Addresses []string `json:"addresses,required"`
 }
 
-// addressMemPool represents a GetAddressMemPool response.
-type addressMemPoolDeltas []addressMemPoolDelta
-
-// addressMemPoolDelta represents a single address mempool delta.
-type addressMemPoolDelta struct {
+// AddressMemPoolDelta represents a single address mempool delta.
+type AddressMemPoolDelta struct {
 	// Address is the base58check encoded address.
 	Address string `json:"address,required"`
 	// TxID is the related txid
@@ -122,7 +115,7 @@ type addressMemPoolDelta struct {
 	// Satoshis is the difference of satoshis.
 	Satoshis int `json:"satoshis,required"`
 	// Timestamp is the time the transaction entered the mempool as UNIX timestamp.
-	Timestamp time.Time `json:"timestamp,required"`
+	Timestamp uint64 `json:"timestamp,required"`
 	// PrevTxIn is the previous txid (if spending).
 	PrevTxIn string `json:"prevtxin,required"`
 	// PrevTxOut is the previous transaction output index (if spending).
@@ -131,11 +124,11 @@ type addressMemPoolDelta struct {
 
 // GetAddressMemPool returns all mempool deltas for an address (requires addressindex to be enabled).
 //     addresses: The array of base58check encoded addresses
-func (aic *addressIndexClient) GetAddressMemPool(addresses []string) (addressMemPoolDeltas, error) {
+func (aic *addressIndexClient) GetAddressMemPool(addresses []string) ([]*AddressMemPoolDelta, error) {
 	payload := getAddressMemPoolPayload{addresses}
 
-	var response addressMemPoolDeltas
-	res, err := aic.c.do(aic.c.url, "getaddressmempool", payload)
+	var response []*AddressMemPoolDelta
+	res, err := aic.do("getaddressmempool", payload)
 	if err != nil {
 		return nil, err
 	}
@@ -157,22 +150,19 @@ type getAddressTxIDsPayload struct {
 	End int `json:"end,omitempty"`
 }
 
-// addressTxIDs represents the payload of a `GetAddressTxIDs` call.
-type addressTxIDs []string
-
 // GetAddressTxIDs returns the txids for an address(es) (requires addressindex to be enabled).
 //     addresses: The array of base58check encoded addresses
 //     start    : The start block height [Optional]
 //     end      : The end block height   [Optional]
-func (aic *addressIndexClient) GetAddressTxIDs(addresses []string, start int, end int) (addressTxIDs, error) {
+func (aic *addressIndexClient) GetAddressTxIDs(addresses []string, start int, end int) ([]string, error) {
 	payload := getAddressTxIDsPayload{
 		Addresses: addresses,
 		Start:     start,
 		End:       end,
 	}
 
-	var response addressTxIDs
-	res, err := aic.c.do(aic.c.url, "getaddresstxids", payload)
+	var response []string
+	res, err := aic.do("getaddresstxids", payload)
 	if err != nil {
 		return nil, err
 	}
@@ -190,11 +180,8 @@ type getAddressUTXOsPayload struct {
 	Addresses []string `json:"addresses,required"`
 }
 
-// addressUTXOs represents the payload of a `GetAddressUTXOs` call.
-type addressUTXOs []addressUTXO
-
-// addressTxID represents a single transaction ID.
-type addressUTXO struct {
+// AddressUTXO represents a single UTXO (Unspent Transaction Output).
+type AddressUTXO struct {
 	// Address is the base58check encoded address.
 	Address string `json:"address,required"`
 	// TxID is the output txid
@@ -211,11 +198,11 @@ type addressUTXO struct {
 
 // GetAddressUTXOs returns the txids for an address(es) (requires addressindex to be enabled).
 //     addresses: The array of base58check encoded addresses
-func (aic *addressIndexClient) GetAddressUTXOs(addresses []string) (addressUTXOs, error) {
+func (aic *addressIndexClient) GetAddressUTXOs(addresses []string) ([]*AddressUTXO, error) {
 	payload := getAddressUTXOsPayload{addresses}
 
-	var response addressUTXOs
-	res, err := aic.c.do(aic.c.url, "getaddressutxos", payload)
+	var response []*AddressUTXO
+	res, err := aic.do("getaddressutxos", payload)
 	if err != nil {
 		return nil, err
 	}
