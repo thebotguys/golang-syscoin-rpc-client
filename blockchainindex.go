@@ -2,7 +2,6 @@ package syscoinrpc
 
 import (
 	"encoding/json"
-	"errors"
 	"strconv"
 )
 
@@ -230,24 +229,6 @@ func (bic *blockchainIndexClient) GetBlockHash(height uint64) (string, error) {
 	return string(response), nil
 }
 
-// GetBlockHashes returns array of hashes of blocks within the timestamp range provided.
-//     high: the newer block timestamp.
-//     low : the older block timestamp.
-func (bic *blockchainIndexClient) GetBlockHashes(high uint64, low uint64) ([]string, error) {
-	response, err := bic.do("getblockhashes", high, low)
-	if err != nil {
-		return nil, err
-	}
-
-	var hashes []string
-	err = json.Unmarshal(response, &hashes)
-	if err != nil {
-		return nil, err
-	}
-
-	return hashes, nil
-}
-
 // FullBlockHeader represents a full block header,
 // response of a verbose `getblockheader` or
 // `getblockheaders` call.
@@ -310,55 +291,93 @@ func (bic *blockchainIndexClient) GetFullBlockHeader(hash string) (*FullBlockHea
 	return &fullHeader, nil
 }
 
-// GetBlockHeaders returns an array of items where
-// each item is a string that is serialized,
-// hex-encoded data for a single blockheader.
-//     Hash  : The starting point hash.
-//     Count : The number of headers to return (default/max = 2000).
-func (bic *blockchainIndexClient) GetBlockHeaders(hash string, count uint) ([]string, error) {
-	if count == 0 {
-		count = 2000
-	} else if count > 2000 {
-		return nil, errors.New("Cannot ask more than 2000 headers")
-	}
-
-	response, err := bic.do("getblockheaders", hash, count, false)
-	if err != nil {
-		return nil, err
-	}
-
-	var headers []string
-	err = json.Unmarshal(response, &headers)
-	if err != nil {
-		return nil, err
-	}
-
-	return headers, nil
+// BlockStats represents the statistics of a block.
+type BlockStats struct {
+	// AvgFee is the average fee in the block.
+	AvgFee uint64 `json:"avgfee,required"`
+	// AvgFeeRate is the average feerate (in satoshis per virtual byte)
+	AvgFeeRate uint64 `json:"avgfeerate,required"`
+	// AvgTxSize is the average transaction size.
+	AvgTxSize uint64 `json:"avgtxsize,required"`
+	// Blockhash is the block hash (to check for potential reorgs)
+	BlockHash string `json:"blockhash,required"`
+	// FeeRatePercentiles is the array of feerates at the 10th, 25th,
+	// 50th, 75th, and 90th percentile weight unit (in satoshis per
+	// virtual byte)
+	FeeRatePercentiles []uint64 `json:"feerate_percentiles,required"`
+	// Height is the height of the block.
+	Height uint64 `json:"height,required"`
+	// InputsCount is the number of inputs (excluding coinbase)
+	InputsCount uint64 `json:"ins,required"`
+	// MaxFee is the maximum fee in the block.
+	MaxFee uint64 `json:"maxfee,required"`
+	// MaxFeeRate is the maximum feerate (in satoshis per virtual byte)
+	MaxFeeRate uint64 `json:"maxfeerate,required"`
+	// MaxTxSize is the maximum transaction size.
+	MaxTxSize uint64 `json:"maxtxsize,required"`
+	// MedianFee is the truncated median fee in the block.
+	MedianFee float32 `json:"medianfee,required"`
+	// MedianTime is the block median time past.
+	MedianTime uint64 `json:"mediantime,required"`
+	// MedianTxSize is the truncated median transaction size
+	MedianTxSize uint64 `json:"mediantxsize,required"`
+	// MinFee is the minimum fee in the block.
+	MinFee uint64 `json:"minfee,required"`
+	// MinFeeRate is the minimum feerate (in satoshis per virtual byte)
+	MinFeeRate uint64 `json:"minfeerate,required"`
+	// MinTxSize is the minimum transaction size.
+	MinTxSize uint64 `json:"mintxsize,required"`
+	// OutputsCount is the number of outputs (excluding coinbase)
+	OutputsCount uint64 `json:"outs,required"`
+	// Subsidy is the block subsidy.
+	Subsidy uint64 `json:"subsidy,required"`
+	// SegwitTotalSize is the total size of all segwit transactions.
+	SegwitTotalSize uint64 `json:"swtotal_size,required"`
+	// SegwitTotalWeight is the total weight of all segwit transactions
+	// divided by segwit scale factor (4).
+	SegwitTotalWeight uint64 `json:"swtotal_weight,required"`
+	// SegwitTxCount is the number of segwit transactions in the block.
+	SegwitTxCount uint64 `json:"swtxs,required"`
+	// Time is the block time.
+	Time uint64 `json:"time,required"`
+	// TotalOutputAmount is the total amount in all outputs (excluding
+	// coinbase and thus reward [ie subsidy + totalfee]).
+	TotalOutputAmount uint64 `json:"total_out,required"`
+	// TotalSize is the total size of all non-coinbase transactions.
+	TotalSize uint64 `json:"total_size,required"`
+	// TotalWeight is the total weight of all non-coinbase transactions
+	// divided by segwit scale factor (4).
+	TotalWeight uint64 `json:"total_weight,required"`
+	// TotalFee is the fee total amount.
+	TotalFee uint64 `json:"totalfee,required"`
+	// TransactionsCount is the number of transactions (excluding coinbase).
+	TransactionsCount uint64 `json:"txs,required"`
+	// UTXOIncrease is the increase/decrease in the number of unspent outputs.
+	UTXOIncrease uint64 `json:"utxo_increase,required"`
+	// UTXOSizeIncrease is the increase/decrease in size for the utxo index
+	// (not discounting op_return and similar).
+	UTXOSizeIncrease uint64 `json:"utxo_size_inc,required"`
 }
 
-// GetFullBlockHeaders returns an array of items with information
-// about <count> blockheaders starting from <hash>.
-//     Hash  : The starting point hash.
-//     Count : The number of headers to return (default/max = 2000).
-func (bic *blockchainIndexClient) GetFullBlockHeaders(hash string, count uint) ([]*FullBlockHeader, error) {
-	if count == 0 {
-		count = 2000
-	} else if count > 2000 {
-		return nil, errors.New("Cannot ask more than 2000 headers")
-	}
-
-	response, err := bic.do("getblockheaders", hash, count, true)
+// GetAllBlockStats gets all block stats.
+// Compute per block statistics for a given window. All amounts are in satoshis.
+// It won't work for some heights with pruning.
+// It won't work without -txindex for utxo_size_inc, *fee or *feerate stats.
+//
+//     blockHash : The hash of the block to get stats from.
+func (bic *blockchainIndexClient) GetAllBlockStats(blockHash string) (*BlockStats, error) {
+	response, err := bic.do("getblockstats", blockHash)
 	if err != nil {
 		return nil, err
 	}
 
-	var fullHeaders []*FullBlockHeader
-	err = json.Unmarshal(response, &fullHeaders)
+	var stats BlockStats
+	err = json.Unmarshal(response, &stats)
 	if err != nil {
 		return nil, err
 	}
 
-	return fullHeaders, nil
+	return &stats, nil
 }
 
 // ChainTip represents a response from the `getchaintips` call.
@@ -367,18 +386,11 @@ type ChainTip struct {
 	Height uint64 `json:"height,required"`
 	// Hash is the block hash of the tip.
 	Hash string `json:"hash,required"`
-	// Difficulty is the difficulty of the mined block of the tip.
-	Difficulty float64 `json:"difficulty,required"`
-	// ChainWork is the expected number of hashes required to produce
-	// the current chain (in hex)
-	ChainWork string `json:"chainwork,required"`
 	// BranchLen is the length of the branch of the chain (0 for main chain).
 	BranchLen uint64 `json:"branchlen,required"`
-	// ForkPoint is the fork point of the tip (same as Hash for the main chain).
-	ForkPoint string `json:"forkpoint,required"`
 	// Status is the status of the chain of the tip ("active" for the main chain).
 	//
-	//  Possible values for status:
+	// Possible values for status:
 	// "invalid"               This branch contains at least one invalid block
 	// "headers-only"          Not all blocks for this branch are available, but the headers are valid
 	// "valid-headers"         All blocks are available for this branch, but they were never fully validated
@@ -389,13 +401,8 @@ type ChainTip struct {
 
 // GetChainTips returns information about all known tips in the block tree,
 // including the main chain as well as orphaned branches.
-//     count     : Only show this much of latest tips
-//     branchlen : Only show tips that have equal or greater length of branch
-func (bic *blockchainIndexClient) GetChainTips(count uint64, branchlen uint64) ([]*ChainTip, error) {
-	if count == 0 {
-		count = 1
-	}
-	response, err := bic.do("getchaintips", count, branchlen)
+func (bic *blockchainIndexClient) GetChainTips() ([]*ChainTip, error) {
+	response, err := bic.do("getchaintips")
 	if err != nil {
 		return nil, err
 	}
@@ -407,6 +414,57 @@ func (bic *blockchainIndexClient) GetChainTips(count uint64, branchlen uint64) (
 	}
 
 	return tips, nil
+}
+
+// ChainTxStats represents the stats of a set of transactions
+// in a window.
+type ChainTxStats struct {
+	// Time is the timestamp for the final block in the window in UNIX format.
+	Time uint64 `json:"time,required"`
+	// TransactionCount is the total number of transactions in the chain up to
+	// that point.
+	TransactionCount uint64 `json:"txcount,required"`
+	// WindowFinalBlockhash is the hash of the final block in the window.
+	WindowFinalBlockhash string `json:"window_final_block_hash,required"`
+	// WindowBlockCount is the size of the window in number of blocks.
+	WindowBlockCount uint64 `json:"window_block_count,required"`
+	// WindowTransactionCount is the number of transactions in the window.
+	// Only returned if "window_block_count" is > 0.
+	WindowTransactionCount uint64 `json:"window_tx_count,required"`
+	// WindowInterval is the elapsed time in the window in seconds.
+	// Only returned if "window_block_count" is > 0.
+	WindowInterval uint64 `json:"window_interval,required"`
+	// TransactionRate is the average rate of transactions per second
+	// in the window. Only returned if "window_interval" is > 0.
+	TransactionRate float64 `json:"txrate,required"`
+}
+
+// GetChainTxStats compute statistics about the total number and
+// rate of transactions in the chain.
+//
+//     nBlocks  : size of the window in number of blocks (default: 0=one month)
+//     fromHash : the hash of the block that ends the window.
+func (bic *blockchainIndexClient) GetChainTxStats(nBlocks uint64, fromHash string) (*ChainTxStats, error) {
+	params := make([]interface{}, 0, 2)
+	if nBlocks > 0 {
+		params = append(params, nBlocks)
+	}
+	if fromHash != "" {
+		params = append(params, fromHash)
+	}
+
+	response, err := bic.do("getchaintxstats", params...)
+	if err != nil {
+		return nil, err
+	}
+
+	var stats ChainTxStats
+	err = json.Unmarshal(response, &stats)
+	if err != nil {
+		return nil, err
+	}
+
+	return &stats, nil
 }
 
 // GetDifficulty returns the current difficulty.
@@ -612,35 +670,6 @@ func (bic *blockchainIndexClient) GetRawMempoolFull() (map[string]*MempoolEntry,
 	return rawpool, nil
 }
 
-// SpentInfo represent where a transaction is spent.
-type SpentInfo struct {
-	TxID  string `json:"txid,required"`
-	Index uint64 `json:"index,required"`
-}
-
-// spentInfoPayload is the payload of a `getspentinfo` request.
-type spentInfoPayload SpentInfo
-
-// GetSpentInfo returns the txid and index where an output is spent.
-func (bic *blockchainIndexClient) GetSpentInfo(txID string, index uint64) (*SpentInfo, error) {
-	payload := spentInfoPayload{
-		TxID:  txID,
-		Index: index,
-	}
-	response, err := bic.do("getspentinfo", payload)
-	if err != nil {
-		return nil, err
-	}
-
-	var spentinfo SpentInfo
-	err = json.Unmarshal(response, &spentinfo)
-	if err != nil {
-		return nil, err
-	}
-
-	return &spentinfo, nil
-}
-
 // TxOut represents a Transaction Output.
 type TxOut struct {
 	// BestBlock is the best block hash.
@@ -789,6 +818,12 @@ func (bic *blockchainIndexClient) PruneBlockchain(heightOrTimestamp uint64) (uin
 	}
 
 	return lastBlockPruned, nil
+}
+
+// SaveMempool dumps the mempool to disk. It will fail until the previous dump is fully loaded.
+func (bic *blockchainIndexClient) SaveMempool() error {
+	_, err := bic.do("savemempool")
+	return err
 }
 
 // VerifyChain verifies blockchain database, based on two parameters.
