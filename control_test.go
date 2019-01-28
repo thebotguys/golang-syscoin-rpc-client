@@ -8,19 +8,19 @@ import (
 	"github.com/thebotguys/golang-syscoin-rpc-client"
 )
 
-func TestDebugInvalid(t *testing.T) {
-	cl, err := syscoinrpc.NewClient(invalidURL, "", "")
-	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
-
-	err = cl.Control.Debug("0")
-	require.Error(t, err, "Must error on any method with invalid URL")
-}
-
 func TestGetHelpInvalid(t *testing.T) {
 	cl, err := syscoinrpc.NewClient(invalidURL, "", "")
 	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
 
 	_, err = cl.Control.GetHelp("")
+	require.Error(t, err, "Must error on any method with invalid URL")
+}
+
+func TestLoggingInvalid(t *testing.T) {
+	cl, err := syscoinrpc.NewClient(invalidURL, "", "")
+	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
+
+	_, err = cl.Control.Logging([]string{}, []string{})
 	require.Error(t, err, "Must error on any method with invalid URL")
 }
 
@@ -32,12 +32,20 @@ func TestGetMemoryInfoInvalid(t *testing.T) {
 	require.Error(t, err, "Must error on any method with invalid URL")
 }
 
-func TestDebugOK(t *testing.T) {
-	cl, err := syscoinrpc.NewClient(syscoinrpc.LocalNodeURL, os.Getenv("RPC_USER"), os.Getenv("RPC_PASSWORD"))
+func TestStopServerInvalid(t *testing.T) {
+	cl, err := syscoinrpc.NewClient(invalidURL, "", "")
 	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
 
-	err = cl.Control.Debug("0")
-	require.NoError(t, err, "Debug: Must not error")
+	err = cl.Control.StopServer()
+	require.Error(t, err, "Must error on any method with invalid URL")
+}
+
+func TestGetUptimeInvalid(t *testing.T) {
+	cl, err := syscoinrpc.NewClient(invalidURL, "", "")
+	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
+
+	_, err = cl.Control.GetUptime()
+	require.Error(t, err, "Must error on any method with invalid URL")
 }
 
 func TestGetHelpOK(t *testing.T) {
@@ -49,6 +57,29 @@ func TestGetHelpOK(t *testing.T) {
 	text, err := cl.Control.GetHelp("help")
 	require.NoError(t, err, "Debug: Must not error")
 	require.Equal(t, expectedText, text, "GetHelp: `help` message must equal to the expected one")
+}
+
+func TestLoggingOK(t *testing.T) {
+	cl, err := syscoinrpc.NewClient(syscoinrpc.LocalNodeURL, os.Getenv("RPC_USER"), os.Getenv("RPC_PASSWORD"))
+	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
+
+	includes := []string{"syscoin"}
+	excludes := []string{"tor"}
+
+	loggings, err := cl.Control.Logging(nil, nil)
+	require.NoError(t, err, "Loggings - no param: must not error")
+	t.Log("Loggings - no param:", loggings)
+
+	loggings, err = cl.Control.Logging(includes, nil)
+	require.NoError(t, err, "Loggings - only include: must not error")
+	t.Log("Loggings - only include:", loggings)
+
+	loggings, err = cl.Control.Logging(includes, excludes)
+	require.NoError(t, err, "Loggings - include + exclude: must not error")
+	t.Log("Loggings - include + exclude:", loggings)
+
+	loggings, err = cl.Control.Logging(nil, excludes)
+	require.EqualError(t, err, syscoinrpc.ErrLoggingFilters.Error(), "Loggings - only exclude: must error")
 }
 
 func TestGetMemoryInfoOK(t *testing.T) {

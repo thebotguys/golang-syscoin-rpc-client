@@ -2,22 +2,21 @@ package syscoinrpc
 
 import (
 	"encoding/json"
-	"errors"
 	"strconv"
 )
 
-// blockchainIndexClient wraps all `blockchainindex` related functions.
-type blockchainIndexClient struct {
+// BlockchainClient wraps all `blockchain` related functions.
+type BlockchainClient struct {
 	c *Client // The binded client, must not be nil.
 }
 
-func (bic *blockchainIndexClient) do(method string, params ...interface{}) (json.RawMessage, error) {
+func (bic *BlockchainClient) do(method string, params ...interface{}) (json.RawMessage, error) {
 	return bic.c.do(method, params...)
 }
 
 // GetBestBlockHash returns the hash of the best (tip) block in
 // the longest blockchain.
-func (bic *blockchainIndexClient) GetBestBlockHash() (string, error) {
+func (bic *BlockchainClient) GetBestBlockHash() (string, error) {
 	res, err := bic.do("getbestblockhash")
 	if err != nil {
 		return "", err
@@ -99,7 +98,7 @@ type FullBlock struct {
 }
 
 // GetBlock returns a string that is serialized, hex-encoded data for block 'hash'.
-func (bic *blockchainIndexClient) GetBlock(blockHash string) (string, error) {
+func (bic *BlockchainClient) GetBlock(blockHash string) (string, error) {
 	response, err := bic.do("getblock", blockHash, false)
 	if err != nil {
 		return "", err
@@ -109,7 +108,7 @@ func (bic *blockchainIndexClient) GetBlock(blockHash string) (string, error) {
 }
 
 // GetFullBlock returns an Object with information about block <hash>.
-func (bic *blockchainIndexClient) GetFullBlock(blockHash string) (*FullBlock, error) {
+func (bic *BlockchainClient) GetFullBlock(blockHash string) (*FullBlock, error) {
 	response, err := bic.do("getblock", blockHash, true)
 	if err != nil {
 		return nil, err
@@ -189,7 +188,8 @@ type BIP9Softfork struct {
 	Since uint64 `json:"since,required"`
 }
 
-func (bic *blockchainIndexClient) GetBlockchainInfo() (*BlockchainInfo, error) {
+// GetBlockchainInfo returns an object containing various state info regarding blockchain processing.
+func (bic *BlockchainClient) GetBlockchainInfo() (*BlockchainInfo, error) {
 	response, err := bic.do("getblockchaininfo")
 	if err != nil {
 		return nil, err
@@ -206,7 +206,7 @@ func (bic *blockchainIndexClient) GetBlockchainInfo() (*BlockchainInfo, error) {
 
 // GetBlockCount returns the number of blocks in the longest blockchain.
 //     Returns 0 on error, with the error.
-func (bic *blockchainIndexClient) GetBlockCount() (uint64, error) {
+func (bic *BlockchainClient) GetBlockCount() (uint64, error) {
 	response, err := bic.do("getblockcount")
 	if err != nil {
 		return 0, err
@@ -221,31 +221,13 @@ func (bic *blockchainIndexClient) GetBlockCount() (uint64, error) {
 }
 
 // GetBlockHash returns the hash of the block at the given height.
-func (bic *blockchainIndexClient) GetBlockHash(height uint64) (string, error) {
+func (bic *BlockchainClient) GetBlockHash(height uint64) (string, error) {
 	response, err := bic.do("getblockhash", height)
 	if err != nil {
 		return "", err
 	}
 
 	return string(response), nil
-}
-
-// GetBlockHashes returns array of hashes of blocks within the timestamp range provided.
-//     high: the newer block timestamp.
-//     low : the older block timestamp.
-func (bic *blockchainIndexClient) GetBlockHashes(high uint64, low uint64) ([]string, error) {
-	response, err := bic.do("getblockhashes", high, low)
-	if err != nil {
-		return nil, err
-	}
-
-	var hashes []string
-	err = json.Unmarshal(response, &hashes)
-	if err != nil {
-		return nil, err
-	}
-
-	return hashes, nil
 }
 
 // FullBlockHeader represents a full block header,
@@ -285,7 +267,7 @@ type FullBlockHeader struct {
 }
 
 // GetBlockHeader returns a string that is serialized, hex-encoded data for block header 'hash'.
-func (bic *blockchainIndexClient) GetBlockHeader(hash string) (string, error) {
+func (bic *BlockchainClient) GetBlockHeader(hash string) (string, error) {
 	response, err := bic.do("getblockheader", hash, false)
 	if err != nil {
 		return "", err
@@ -295,7 +277,7 @@ func (bic *blockchainIndexClient) GetBlockHeader(hash string) (string, error) {
 }
 
 // GetFullBlockHeader returns an Object with information about block header <hash>.
-func (bic *blockchainIndexClient) GetFullBlockHeader(hash string) (*FullBlockHeader, error) {
+func (bic *BlockchainClient) GetFullBlockHeader(hash string) (*FullBlockHeader, error) {
 	response, err := bic.do("getblockheader", hash, true)
 	if err != nil {
 		return nil, err
@@ -310,55 +292,93 @@ func (bic *blockchainIndexClient) GetFullBlockHeader(hash string) (*FullBlockHea
 	return &fullHeader, nil
 }
 
-// GetBlockHeaders returns an array of items where
-// each item is a string that is serialized,
-// hex-encoded data for a single blockheader.
-//     Hash  : The starting point hash.
-//     Count : The number of headers to return (default/max = 2000).
-func (bic *blockchainIndexClient) GetBlockHeaders(hash string, count uint) ([]string, error) {
-	if count == 0 {
-		count = 2000
-	} else if count > 2000 {
-		return nil, errors.New("Cannot ask more than 2000 headers")
-	}
-
-	response, err := bic.do("getblockheaders", hash, count, false)
-	if err != nil {
-		return nil, err
-	}
-
-	var headers []string
-	err = json.Unmarshal(response, &headers)
-	if err != nil {
-		return nil, err
-	}
-
-	return headers, nil
+// BlockStats represents the statistics of a block.
+type BlockStats struct {
+	// AvgFee is the average fee in the block.
+	AvgFee uint64 `json:"avgfee,required"`
+	// AvgFeeRate is the average feerate (in satoshis per virtual byte)
+	AvgFeeRate uint64 `json:"avgfeerate,required"`
+	// AvgTxSize is the average transaction size.
+	AvgTxSize uint64 `json:"avgtxsize,required"`
+	// Blockhash is the block hash (to check for potential reorgs)
+	BlockHash string `json:"blockhash,required"`
+	// FeeRatePercentiles is the array of feerates at the 10th, 25th,
+	// 50th, 75th, and 90th percentile weight unit (in satoshis per
+	// virtual byte)
+	FeeRatePercentiles []uint64 `json:"feerate_percentiles,required"`
+	// Height is the height of the block.
+	Height uint64 `json:"height,required"`
+	// InputsCount is the number of inputs (excluding coinbase)
+	InputsCount uint64 `json:"ins,required"`
+	// MaxFee is the maximum fee in the block.
+	MaxFee uint64 `json:"maxfee,required"`
+	// MaxFeeRate is the maximum feerate (in satoshis per virtual byte)
+	MaxFeeRate uint64 `json:"maxfeerate,required"`
+	// MaxTxSize is the maximum transaction size.
+	MaxTxSize uint64 `json:"maxtxsize,required"`
+	// MedianFee is the truncated median fee in the block.
+	MedianFee float32 `json:"medianfee,required"`
+	// MedianTime is the block median time past.
+	MedianTime uint64 `json:"mediantime,required"`
+	// MedianTxSize is the truncated median transaction size
+	MedianTxSize uint64 `json:"mediantxsize,required"`
+	// MinFee is the minimum fee in the block.
+	MinFee uint64 `json:"minfee,required"`
+	// MinFeeRate is the minimum feerate (in satoshis per virtual byte)
+	MinFeeRate uint64 `json:"minfeerate,required"`
+	// MinTxSize is the minimum transaction size.
+	MinTxSize uint64 `json:"mintxsize,required"`
+	// OutputsCount is the number of outputs (excluding coinbase)
+	OutputsCount uint64 `json:"outs,required"`
+	// Subsidy is the block subsidy.
+	Subsidy uint64 `json:"subsidy,required"`
+	// SegwitTotalSize is the total size of all segwit transactions.
+	SegwitTotalSize uint64 `json:"swtotal_size,required"`
+	// SegwitTotalWeight is the total weight of all segwit transactions
+	// divided by segwit scale factor (4).
+	SegwitTotalWeight uint64 `json:"swtotal_weight,required"`
+	// SegwitTxCount is the number of segwit transactions in the block.
+	SegwitTxCount uint64 `json:"swtxs,required"`
+	// Time is the block time.
+	Time uint64 `json:"time,required"`
+	// TotalOutputAmount is the total amount in all outputs (excluding
+	// coinbase and thus reward [ie subsidy + totalfee]).
+	TotalOutputAmount uint64 `json:"total_out,required"`
+	// TotalSize is the total size of all non-coinbase transactions.
+	TotalSize uint64 `json:"total_size,required"`
+	// TotalWeight is the total weight of all non-coinbase transactions
+	// divided by segwit scale factor (4).
+	TotalWeight uint64 `json:"total_weight,required"`
+	// TotalFee is the fee total amount.
+	TotalFee uint64 `json:"totalfee,required"`
+	// TransactionsCount is the number of transactions (excluding coinbase).
+	TransactionsCount uint64 `json:"txs,required"`
+	// UTXOIncrease is the increase/decrease in the number of unspent outputs.
+	UTXOIncrease uint64 `json:"utxo_increase,required"`
+	// UTXOSizeIncrease is the increase/decrease in size for the utxo index
+	// (not discounting op_return and similar).
+	UTXOSizeIncrease uint64 `json:"utxo_size_inc,required"`
 }
 
-// GetFullBlockHeaders returns an array of items with information
-// about <count> blockheaders starting from <hash>.
-//     Hash  : The starting point hash.
-//     Count : The number of headers to return (default/max = 2000).
-func (bic *blockchainIndexClient) GetFullBlockHeaders(hash string, count uint) ([]*FullBlockHeader, error) {
-	if count == 0 {
-		count = 2000
-	} else if count > 2000 {
-		return nil, errors.New("Cannot ask more than 2000 headers")
-	}
-
-	response, err := bic.do("getblockheaders", hash, count, true)
+// GetAllBlockStats gets all block stats.
+// Compute per block statistics for a given window. All amounts are in satoshis.
+// It won't work for some heights with pruning.
+// It won't work without -txindex for utxo_size_inc, *fee or *feerate stats.
+//
+//     blockHash : The hash of the block to get stats from.
+func (bic *BlockchainClient) GetAllBlockStats(blockHash string) (*BlockStats, error) {
+	response, err := bic.do("getblockstats", blockHash)
 	if err != nil {
 		return nil, err
 	}
 
-	var fullHeaders []*FullBlockHeader
-	err = json.Unmarshal(response, &fullHeaders)
+	var stats BlockStats
+	err = json.Unmarshal(response, &stats)
 	if err != nil {
 		return nil, err
 	}
 
-	return fullHeaders, nil
+	return &stats, nil
 }
 
 // ChainTip represents a response from the `getchaintips` call.
@@ -367,18 +387,11 @@ type ChainTip struct {
 	Height uint64 `json:"height,required"`
 	// Hash is the block hash of the tip.
 	Hash string `json:"hash,required"`
-	// Difficulty is the difficulty of the mined block of the tip.
-	Difficulty float64 `json:"difficulty,required"`
-	// ChainWork is the expected number of hashes required to produce
-	// the current chain (in hex)
-	ChainWork string `json:"chainwork,required"`
 	// BranchLen is the length of the branch of the chain (0 for main chain).
 	BranchLen uint64 `json:"branchlen,required"`
-	// ForkPoint is the fork point of the tip (same as Hash for the main chain).
-	ForkPoint string `json:"forkpoint,required"`
 	// Status is the status of the chain of the tip ("active" for the main chain).
 	//
-	//  Possible values for status:
+	// Possible values for status:
 	// "invalid"               This branch contains at least one invalid block
 	// "headers-only"          Not all blocks for this branch are available, but the headers are valid
 	// "valid-headers"         All blocks are available for this branch, but they were never fully validated
@@ -389,13 +402,8 @@ type ChainTip struct {
 
 // GetChainTips returns information about all known tips in the block tree,
 // including the main chain as well as orphaned branches.
-//     count     : Only show this much of latest tips
-//     branchlen : Only show tips that have equal or greater length of branch
-func (bic *blockchainIndexClient) GetChainTips(count uint64, branchlen uint64) ([]*ChainTip, error) {
-	if count == 0 {
-		count = 1
-	}
-	response, err := bic.do("getchaintips", count, branchlen)
+func (bic *BlockchainClient) GetChainTips() ([]*ChainTip, error) {
+	response, err := bic.do("getchaintips")
 	if err != nil {
 		return nil, err
 	}
@@ -409,8 +417,59 @@ func (bic *blockchainIndexClient) GetChainTips(count uint64, branchlen uint64) (
 	return tips, nil
 }
 
+// ChainTxStats represents the stats of a set of transactions
+// in a window.
+type ChainTxStats struct {
+	// Time is the timestamp for the final block in the window in UNIX format.
+	Time uint64 `json:"time,required"`
+	// TransactionCount is the total number of transactions in the chain up to
+	// that point.
+	TransactionCount uint64 `json:"txcount,required"`
+	// WindowFinalBlockhash is the hash of the final block in the window.
+	WindowFinalBlockhash string `json:"window_final_block_hash,required"`
+	// WindowBlockCount is the size of the window in number of blocks.
+	WindowBlockCount uint64 `json:"window_block_count,required"`
+	// WindowTransactionCount is the number of transactions in the window.
+	// Only returned if "window_block_count" is > 0.
+	WindowTransactionCount uint64 `json:"window_tx_count,required"`
+	// WindowInterval is the elapsed time in the window in seconds.
+	// Only returned if "window_block_count" is > 0.
+	WindowInterval uint64 `json:"window_interval,required"`
+	// TransactionRate is the average rate of transactions per second
+	// in the window. Only returned if "window_interval" is > 0.
+	TransactionRate float64 `json:"txrate,required"`
+}
+
+// GetChainTxStats compute statistics about the total number and
+// rate of transactions in the chain.
+//
+//     nBlocks  : size of the window in number of blocks (default: 0=one month)
+//     fromHash : the hash of the block that ends the window.
+func (bic *BlockchainClient) GetChainTxStats(nBlocks uint64, fromHash string) (*ChainTxStats, error) {
+	params := make([]interface{}, 0, 2)
+	if nBlocks > 0 {
+		params = append(params, nBlocks)
+	}
+	if fromHash != "" {
+		params = append(params, fromHash)
+	}
+
+	response, err := bic.do("getchaintxstats", params...)
+	if err != nil {
+		return nil, err
+	}
+
+	var stats ChainTxStats
+	err = json.Unmarshal(response, &stats)
+	if err != nil {
+		return nil, err
+	}
+
+	return &stats, nil
+}
+
 // GetDifficulty returns the current difficulty.
-func (bic *blockchainIndexClient) GetDifficulty() (float64, error) {
+func (bic *BlockchainClient) GetDifficulty() (float64, error) {
 	response, err := bic.do("getdifficulty")
 	if err != nil {
 		return -1, err
@@ -462,7 +521,7 @@ type MempoolEntry struct {
 
 // GetMempoolAncestors If txid is in the mempool, returns all in-mempool ancestors summarized data.
 //     txID : The transaction id (must be in mempool)
-func (bic *blockchainIndexClient) GetMempoolAncestors(txID string) ([]string, error) {
+func (bic *BlockchainClient) GetMempoolAncestors(txID string) ([]string, error) {
 	response, err := bic.do("getmempoolancestors", txID, false)
 	if err != nil {
 		return nil, err
@@ -479,7 +538,7 @@ func (bic *blockchainIndexClient) GetMempoolAncestors(txID string) ([]string, er
 
 // GetMempoolAncestorsFull If txid is in the mempool, returns all in-mempool ancestors full data.
 //     txID : The transaction id (must be in mempool)
-func (bic *blockchainIndexClient) GetMempoolAncestorsFull(txID string) ([]*MempoolEntry, error) {
+func (bic *BlockchainClient) GetMempoolAncestorsFull(txID string) ([]*MempoolEntry, error) {
 	response, err := bic.do("getmempoolancestors", txID, true)
 	if err != nil {
 		return nil, err
@@ -496,7 +555,7 @@ func (bic *blockchainIndexClient) GetMempoolAncestorsFull(txID string) ([]*Mempo
 
 // GetMempoolDescendants If txid is in the mempool, returns all in-mempool Descendants summarized data.
 //     txID : The transaction id (must be in mempool)
-func (bic *blockchainIndexClient) GetMempoolDescendants(txID string) ([]string, error) {
+func (bic *BlockchainClient) GetMempoolDescendants(txID string) ([]string, error) {
 	response, err := bic.do("getmempooldescendants", txID, false)
 	if err != nil {
 		return nil, err
@@ -513,7 +572,7 @@ func (bic *blockchainIndexClient) GetMempoolDescendants(txID string) ([]string, 
 
 // GetMempoolDescendantsFull If txid is in the mempool, returns all in-mempool Descendants full data.
 //     txID : The transaction id (must be in mempool)
-func (bic *blockchainIndexClient) GetMempoolDescendantsFull(txID string) ([]*MempoolEntry, error) {
+func (bic *BlockchainClient) GetMempoolDescendantsFull(txID string) ([]*MempoolEntry, error) {
 	response, err := bic.do("getmempooldescendants", txID, true)
 	if err != nil {
 		return nil, err
@@ -530,7 +589,7 @@ func (bic *blockchainIndexClient) GetMempoolDescendantsFull(txID string) ([]*Mem
 
 // GetMempoolEntry returns full mempool data for given transaction.
 //     txID : The transaction id (must be in mempool).
-func (bic *blockchainIndexClient) GetMempoolEntry(txID string) (*MempoolEntry, error) {
+func (bic *BlockchainClient) GetMempoolEntry(txID string) (*MempoolEntry, error) {
 	response, err := bic.do("getmempoolentry", txID)
 	if err != nil {
 		return nil, err
@@ -559,7 +618,8 @@ type MempoolInfo struct {
 	MempoolMinFee float64 `json:"mempoolminfee,required"`
 }
 
-func (bic *blockchainIndexClient) GetMempoolInfo() (*MempoolInfo, error) {
+// GetMempoolInfo returns details on the active state of the TX memory pool.
+func (bic *BlockchainClient) GetMempoolInfo() (*MempoolInfo, error) {
 	response, err := bic.do("getmempoolinfo")
 	if err != nil {
 		return nil, err
@@ -577,7 +637,7 @@ func (bic *blockchainIndexClient) GetMempoolInfo() (*MempoolInfo, error) {
 // GetRawMempool returns all transaction ids in memory pool as array of string transaction ids.
 //
 //     HINT: use `getmempoolentry` to fetch a specific transaction from the mempool.
-func (bic *blockchainIndexClient) GetRawMempool() ([]string, error) {
+func (bic *BlockchainClient) GetRawMempool() ([]string, error) {
 	response, err := bic.do("getrawmempool", false)
 	if err != nil {
 		return nil, err
@@ -592,12 +652,12 @@ func (bic *blockchainIndexClient) GetRawMempool() ([]string, error) {
 	return rawpool, nil
 }
 
-// GetRawMempool returns all transaction ids in memory pool as array of objects.
+// GetRawMempoolFull returns all transaction ids in memory pool as array of objects.
 //
 //     HINT: use `getmempoolentry` to fetch a specific transaction from the mempool.
 //
 // Response type is a map [transactionID]MempoolEntry object.
-func (bic *blockchainIndexClient) GetRawMempoolFull() (map[string]*MempoolEntry, error) {
+func (bic *BlockchainClient) GetRawMempoolFull() (map[string]*MempoolEntry, error) {
 	response, err := bic.do("getrawmempool", true)
 	if err != nil {
 		return nil, err
@@ -610,35 +670,6 @@ func (bic *blockchainIndexClient) GetRawMempoolFull() (map[string]*MempoolEntry,
 	}
 
 	return rawpool, nil
-}
-
-// SpentInfo represent where a transaction is spent.
-type SpentInfo struct {
-	TxID  string `json:"txid,required"`
-	Index uint64 `json:"index,required"`
-}
-
-// spentInfoPayload is the payload of a `getspentinfo` request.
-type spentInfoPayload SpentInfo
-
-// GetSpentInfo returns the txid and index where an output is spent.
-func (bic *blockchainIndexClient) GetSpentInfo(txID string, index uint64) (*SpentInfo, error) {
-	payload := spentInfoPayload{
-		TxID:  txID,
-		Index: index,
-	}
-	response, err := bic.do("getspentinfo", payload)
-	if err != nil {
-		return nil, err
-	}
-
-	var spentinfo SpentInfo
-	err = json.Unmarshal(response, &spentinfo)
-	if err != nil {
-		return nil, err
-	}
-
-	return &spentinfo, nil
 }
 
 // TxOut represents a Transaction Output.
@@ -671,7 +702,8 @@ type ScriptPubKey struct {
 	Addresses []string `json:"addresses,required"`
 }
 
-func (bic *blockchainIndexClient) GetTxOut(txID string, n uint64, includeMempool bool) (*TxOut, error) {
+// GetTxOut returns details about an unspent transaction output.
+func (bic *BlockchainClient) GetTxOut(txID string, n uint64, includeMempool bool) (*TxOut, error) {
 	response, err := bic.do("gettxout", txID, n, includeMempool)
 	if err != nil {
 		return nil, err
@@ -695,7 +727,7 @@ func (bic *blockchainIndexClient) GetTxOut(txID string, n uint64, includeMempool
 //            you need to maintain a transaction index, using the -txindex and -spentindex
 //            command line option or specify the block in which the transaction is included
 //            manually (by blockhash).
-func (bic *blockchainIndexClient) GetTxOutProof(txIDs []string) (string, error) {
+func (bic *BlockchainClient) GetTxOutProof(txIDs []string) (string, error) {
 	proof, err := bic.do("gettxoutproof", txIDs)
 	if err != nil {
 		return "", err
@@ -715,7 +747,7 @@ func (bic *blockchainIndexClient) GetTxOutProof(txIDs []string) (string, error) 
 //            you need to maintain a transaction index, using the -txindex command line
 //            option or specify the block in which the transaction is included manually
 //            (by blockhash).
-func (bic *blockchainIndexClient) GetTxOutProofInBlock(txIDs []string, blockHash string) (string, error) {
+func (bic *BlockchainClient) GetTxOutProofInBlock(txIDs []string, blockHash string) (string, error) {
 	proof, err := bic.do("gettxoutproof", txIDs, blockHash)
 	if err != nil {
 		return "", err
@@ -744,7 +776,7 @@ type TxOutSetInfo struct {
 
 // GetTxOutSetInfo returns statistics about the unspent transaction output set.
 //     NOTE : This call may take some time.
-func (bic *blockchainIndexClient) GetTxOutSetInfo() (*TxOutSetInfo, error) {
+func (bic *BlockchainClient) GetTxOutSetInfo() (*TxOutSetInfo, error) {
 	response, err := bic.do("gettxoutsetinfo")
 	if err != nil {
 		return nil, err
@@ -764,12 +796,12 @@ func (bic *blockchainIndexClient) GetTxOutSetInfo() (*TxOutSetInfo, error) {
 // A later preciousblock call can override the effect of an earlier one.
 //
 // The effects of preciousblock are not retained across restarts.
-func (bic *blockchainIndexClient) PreciousBlock(blockHash string) error {
+func (bic *BlockchainClient) PreciousBlock(blockHash string) error {
 	_, err := bic.do("preciousblock", blockHash)
 	return err
 }
 
-// PruneBlockchains prunes the blockchain up to the specified block height.
+// PruneBlockchain prunes the blockchain up to the specified block height.
 //
 // Returns the height of the last block pruned.
 //
@@ -777,7 +809,7 @@ func (bic *blockchainIndexClient) PreciousBlock(blockHash string) error {
 //                        to prune blocks whose block time is at least 2 hours
 //                        older than the provided timestamp.
 //
-func (bic *blockchainIndexClient) PruneBlockchain(heightOrTimestamp uint64) (uint64, error) {
+func (bic *BlockchainClient) PruneBlockchain(heightOrTimestamp uint64) (uint64, error) {
 	response, err := bic.do("pruneblockchain", heightOrTimestamp)
 	if err != nil {
 		return 0, err
@@ -791,11 +823,17 @@ func (bic *blockchainIndexClient) PruneBlockchain(heightOrTimestamp uint64) (uin
 	return lastBlockPruned, nil
 }
 
+// SaveMempool dumps the mempool to disk. It will fail until the previous dump is fully loaded.
+func (bic *BlockchainClient) SaveMempool() error {
+	_, err := bic.do("savemempool")
+	return err
+}
+
 // VerifyChain verifies blockchain database, based on two parameters.
 //
 //     checkLevel : optional, 0-4, default=4 - How thorough the block verification is.
 //     nBlocks    : optional, default=6, 0=all - The number of blocks to check.
-func (bic *blockchainIndexClient) VerifyChain(checkLevel uint64, nBlocks uint64) (bool, error) {
+func (bic *BlockchainClient) VerifyChain(checkLevel uint64, nBlocks uint64) (bool, error) {
 	response, err := bic.do("verifychain", checkLevel, nBlocks)
 	if err != nil {
 		return false, err
@@ -814,7 +852,7 @@ func (bic *blockchainIndexClient) VerifyChain(checkLevel uint64, nBlocks uint64)
 // block is not in our best chain.
 //
 //     proof : The hex-encoded proof generated by `gettxoutproof`.
-func (bic *blockchainIndexClient) VerifyTxOutProof(proof string) ([]string, error) {
+func (bic *BlockchainClient) VerifyTxOutProof(proof string) ([]string, error) {
 	response, err := bic.do("verifytxoutproof", proof)
 	if err != nil {
 		return nil, err

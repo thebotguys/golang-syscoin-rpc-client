@@ -1,31 +1,22 @@
 package syscoinrpc
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+	"strconv"
+)
 
-// controlClient wraps all `control` related functions.
-type controlClient struct {
+// ControlClient wraps all `control` related functions.
+type ControlClient struct {
 	c *Client // The binded client, must not be nil.
 }
 
-func (cc *controlClient) do(method string, params ...interface{}) (json.RawMessage, error) {
+func (cc *ControlClient) do(method string, params ...interface{}) (json.RawMessage, error) {
 	return cc.c.do(method, params...)
 }
 
-// Debug sets the debug flags
-//
-// Allowed flags are the following:
-//     0 : no flag
-//     1 : all flags
-//     Selective flags: addrman|alert|bench|coindb|db|lock|rand|rpc|selectcoins|mempool|mempoolrej|net|proxy|prune|http|libevent|tor|zmq|syscoin|privatesend|instantsend|masternode|spork|keepass|mnpayments|gobject
-//
-// It is possible to set multiple flags by chaining them with a '+' character (e.g. "addrman+alert")
-func (cc *controlClient) Debug(flags string) error {
-	_, err := cc.do("debug", flags)
-	return err
-}
-
 // GetHelp returns the help text for the specified command.
-func (cc *controlClient) GetHelp(commandName string) (string, error) {
+func (cc *ControlClient) GetHelp(commandName string) (string, error) {
 	response, err := cc.do("help", commandName)
 	if err != nil {
 		return "", err
@@ -58,7 +49,7 @@ type LockedMemoryInfo struct {
 }
 
 // GetMemoryInfo return general information about memory usage.
-func (cc *controlClient) GetMemoryInfo() (*MemoryInfo, error) {
+func (cc *ControlClient) GetMemoryInfo() (*MemoryInfo, error) {
 	response, err := cc.do("getmemoryinfo")
 	if err != nil {
 		return nil, err
@@ -73,8 +64,67 @@ func (cc *controlClient) GetMemoryInfo() (*MemoryInfo, error) {
 	return &info, nil
 }
 
+// ErrLoggingFilters is an error when putting invalid filters to `logging` call.
+var ErrLoggingFilters = errors.New("Must define include AND exclude fields, or none of them, or include only")
+
+// Logging gets and sets the logging configuration.
+//
+// When called without an argument, returns the list of categories with status that are currently being debug logged or not.
+//
+// When called with arguments, adds or removes categories from debug logging and return the lists above.
+//
+// The arguments are evaluated in order "include", "exclude".
+//
+// If an item is both included and excluded, it will thus end up being excluded.
+//
+// The valid logging categories are: net, tor, mempool, http, bench, zmq, db, rpc, estimatefee, addrman, selectcoins, reindex, cmpctblock, rand, prune, proxy, mempoolrej, libevent, coindb, qt, leveldb, threadpool, masternode, gobject, mnpayments, mnsync, spork, syscoin
+//
+// In addition, the following are available as category names with special meanings:
+//
+//     "all",  "1" : represent all logging categories.
+//     "none", "0" : even if other logging categories are specified, ignore all of them.
+func (cc *ControlClient) Logging(include []string, exclude []string) (map[string]bool, error) {
+	params := make([]interface{}, 0, 2)
+	if include != nil {
+		params = append(params, include)
+		if exclude != nil {
+			params = append(params, exclude)
+		}
+	} else if include == nil && exclude != nil {
+		return nil, ErrLoggingFilters
+	}
+
+	response, err := cc.do("logging", params...)
+	if err != nil {
+		return nil, err
+	}
+
+	var loggings map[string]bool
+	err = json.Unmarshal(response, &loggings)
+	if err != nil {
+		return nil, err
+	}
+
+	return loggings, nil
+}
+
 // StopServer stops the running syscoin server node.
-func (cc *controlClient) StopServer() error {
+func (cc *ControlClient) StopServer() error {
 	_, err := cc.do("stop")
 	return err
+}
+
+// GetUptime returns the total uptime of the server.
+func (cc *ControlClient) GetUptime() (uint64, error) {
+	response, err := cc.do("uptime")
+	if err != nil {
+		return 0, err
+	}
+
+	uptime, err := strconv.ParseUint(string(response), 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return uptime, nil
 }
