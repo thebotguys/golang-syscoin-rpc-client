@@ -6,17 +6,17 @@ import (
 	"strconv"
 )
 
-// controlClient wraps all `control` related functions.
-type controlClient struct {
+// ControlClient wraps all `control` related functions.
+type ControlClient struct {
 	c *Client // The binded client, must not be nil.
 }
 
-func (cc *controlClient) do(method string, params ...interface{}) (json.RawMessage, error) {
+func (cc *ControlClient) do(method string, params ...interface{}) (json.RawMessage, error) {
 	return cc.c.do(method, params...)
 }
 
 // GetHelp returns the help text for the specified command.
-func (cc *controlClient) GetHelp(commandName string) (string, error) {
+func (cc *ControlClient) GetHelp(commandName string) (string, error) {
 	response, err := cc.do("help", commandName)
 	if err != nil {
 		return "", err
@@ -49,7 +49,7 @@ type LockedMemoryInfo struct {
 }
 
 // GetMemoryInfo return general information about memory usage.
-func (cc *controlClient) GetMemoryInfo() (*MemoryInfo, error) {
+func (cc *ControlClient) GetMemoryInfo() (*MemoryInfo, error) {
 	response, err := cc.do("getmemoryinfo")
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ var ErrLoggingFilters = errors.New("Must define include AND exclude fields, or n
 //
 //     "all",  "1" : represent all logging categories.
 //     "none", "0" : even if other logging categories are specified, ignore all of them.
-func (cc *controlClient) Logging(include []string, exclude []string) (map[string]bool, error) {
+func (cc *ControlClient) Logging(include []string, exclude []string) (map[string]bool, error) {
 	params := make([]interface{}, 0, 2)
 	if include != nil {
 		params = append(params, include)
@@ -109,13 +109,13 @@ func (cc *controlClient) Logging(include []string, exclude []string) (map[string
 }
 
 // StopServer stops the running syscoin server node.
-func (cc *controlClient) StopServer() error {
+func (cc *ControlClient) StopServer() error {
 	_, err := cc.do("stop")
 	return err
 }
 
 // GetUptime returns the total uptime of the server.
-func (cc *controlClient) GetUptime() (uint64, error) {
+func (cc *ControlClient) GetUptime() (uint64, error) {
 	response, err := cc.do("uptime")
 	if err != nil {
 		return 0, err

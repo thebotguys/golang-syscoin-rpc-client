@@ -12,13 +12,13 @@ const (
 
 // Client represents a syscoin JSON-RPC over HTTP client.
 type Client struct {
-	url             string                 // The url of the node to connect to.
-	user            string                 // The RPC Username.
-	pass            string                 // The RPC Password.
-	httpClient      *http.Client           // The JSON-RPC over HTTP sub client.
-	BlockchainIndex *blockchainIndexClient // The client of `blockchaindex` calls.
-	Control         *controlClient         // The client of `control` calls.
-	Generating      *generatingClient      // The client of `generating` calls.
+	url        string            // The url of the node to connect to.
+	user       string            // The RPC Username.
+	pass       string            // The RPC Password.
+	httpClient *http.Client      // The JSON-RPC over HTTP sub client.
+	Blockchain *BlockchainClient // The client of `blockchain` calls.
+	Control    *ControlClient    // The client of `control` calls.
+	Generating *GeneratingClient // The client of `generating` calls.
 }
 
 // NewClient creates a new client object.
@@ -30,9 +30,9 @@ func NewClient(url string, rpcUser string, rpcPassword string) (*Client, error) 
 		httpClient: http.DefaultClient,
 	}
 
-	cl.BlockchainIndex = &blockchainIndexClient{cl}
-	cl.Control = &controlClient{cl}
-	cl.Generating = &generatingClient{cl}
+	cl.Blockchain = &BlockchainClient{cl}
+	cl.Control = &ControlClient{cl}
+	cl.Generating = &GeneratingClient{cl}
 
 	return cl, nil
 }

@@ -5,18 +5,18 @@ import (
 	"strconv"
 )
 
-// blockchainIndexClient wraps all `blockchainindex` related functions.
-type blockchainIndexClient struct {
+// BlockchainClient wraps all `blockchain` related functions.
+type BlockchainClient struct {
 	c *Client // The binded client, must not be nil.
 }
 
-func (bic *blockchainIndexClient) do(method string, params ...interface{}) (json.RawMessage, error) {
+func (bic *BlockchainClient) do(method string, params ...interface{}) (json.RawMessage, error) {
 	return bic.c.do(method, params...)
 }
 
 // GetBestBlockHash returns the hash of the best (tip) block in
 // the longest blockchain.
-func (bic *blockchainIndexClient) GetBestBlockHash() (string, error) {
+func (bic *BlockchainClient) GetBestBlockHash() (string, error) {
 	res, err := bic.do("getbestblockhash")
 	if err != nil {
 		return "", err
@@ -98,7 +98,7 @@ type FullBlock struct {
 }
 
 // GetBlock returns a string that is serialized, hex-encoded data for block 'hash'.
-func (bic *blockchainIndexClient) GetBlock(blockHash string) (string, error) {
+func (bic *BlockchainClient) GetBlock(blockHash string) (string, error) {
 	response, err := bic.do("getblock", blockHash, false)
 	if err != nil {
 		return "", err
@@ -108,7 +108,7 @@ func (bic *blockchainIndexClient) GetBlock(blockHash string) (string, error) {
 }
 
 // GetFullBlock returns an Object with information about block <hash>.
-func (bic *blockchainIndexClient) GetFullBlock(blockHash string) (*FullBlock, error) {
+func (bic *BlockchainClient) GetFullBlock(blockHash string) (*FullBlock, error) {
 	response, err := bic.do("getblock", blockHash, true)
 	if err != nil {
 		return nil, err
@@ -188,7 +188,8 @@ type BIP9Softfork struct {
 	Since uint64 `json:"since,required"`
 }
 
-func (bic *blockchainIndexClient) GetBlockchainInfo() (*BlockchainInfo, error) {
+// GetBlockchainInfo returns an object containing various state info regarding blockchain processing.
+func (bic *BlockchainClient) GetBlockchainInfo() (*BlockchainInfo, error) {
 	response, err := bic.do("getblockchaininfo")
 	if err != nil {
 		return nil, err
@@ -205,7 +206,7 @@ func (bic *blockchainIndexClient) GetBlockchainInfo() (*BlockchainInfo, error) {
 
 // GetBlockCount returns the number of blocks in the longest blockchain.
 //     Returns 0 on error, with the error.
-func (bic *blockchainIndexClient) GetBlockCount() (uint64, error) {
+func (bic *BlockchainClient) GetBlockCount() (uint64, error) {
 	response, err := bic.do("getblockcount")
 	if err != nil {
 		return 0, err
@@ -220,7 +221,7 @@ func (bic *blockchainIndexClient) GetBlockCount() (uint64, error) {
 }
 
 // GetBlockHash returns the hash of the block at the given height.
-func (bic *blockchainIndexClient) GetBlockHash(height uint64) (string, error) {
+func (bic *BlockchainClient) GetBlockHash(height uint64) (string, error) {
 	response, err := bic.do("getblockhash", height)
 	if err != nil {
 		return "", err
@@ -266,7 +267,7 @@ type FullBlockHeader struct {
 }
 
 // GetBlockHeader returns a string that is serialized, hex-encoded data for block header 'hash'.
-func (bic *blockchainIndexClient) GetBlockHeader(hash string) (string, error) {
+func (bic *BlockchainClient) GetBlockHeader(hash string) (string, error) {
 	response, err := bic.do("getblockheader", hash, false)
 	if err != nil {
 		return "", err
@@ -276,7 +277,7 @@ func (bic *blockchainIndexClient) GetBlockHeader(hash string) (string, error) {
 }
 
 // GetFullBlockHeader returns an Object with information about block header <hash>.
-func (bic *blockchainIndexClient) GetFullBlockHeader(hash string) (*FullBlockHeader, error) {
+func (bic *BlockchainClient) GetFullBlockHeader(hash string) (*FullBlockHeader, error) {
 	response, err := bic.do("getblockheader", hash, true)
 	if err != nil {
 		return nil, err
@@ -365,7 +366,7 @@ type BlockStats struct {
 // It won't work without -txindex for utxo_size_inc, *fee or *feerate stats.
 //
 //     blockHash : The hash of the block to get stats from.
-func (bic *blockchainIndexClient) GetAllBlockStats(blockHash string) (*BlockStats, error) {
+func (bic *BlockchainClient) GetAllBlockStats(blockHash string) (*BlockStats, error) {
 	response, err := bic.do("getblockstats", blockHash)
 	if err != nil {
 		return nil, err
@@ -401,7 +402,7 @@ type ChainTip struct {
 
 // GetChainTips returns information about all known tips in the block tree,
 // including the main chain as well as orphaned branches.
-func (bic *blockchainIndexClient) GetChainTips() ([]*ChainTip, error) {
+func (bic *BlockchainClient) GetChainTips() ([]*ChainTip, error) {
 	response, err := bic.do("getchaintips")
 	if err != nil {
 		return nil, err
@@ -444,7 +445,7 @@ type ChainTxStats struct {
 //
 //     nBlocks  : size of the window in number of blocks (default: 0=one month)
 //     fromHash : the hash of the block that ends the window.
-func (bic *blockchainIndexClient) GetChainTxStats(nBlocks uint64, fromHash string) (*ChainTxStats, error) {
+func (bic *BlockchainClient) GetChainTxStats(nBlocks uint64, fromHash string) (*ChainTxStats, error) {
 	params := make([]interface{}, 0, 2)
 	if nBlocks > 0 {
 		params = append(params, nBlocks)
@@ -468,7 +469,7 @@ func (bic *blockchainIndexClient) GetChainTxStats(nBlocks uint64, fromHash strin
 }
 
 // GetDifficulty returns the current difficulty.
-func (bic *blockchainIndexClient) GetDifficulty() (float64, error) {
+func (bic *BlockchainClient) GetDifficulty() (float64, error) {
 	response, err := bic.do("getdifficulty")
 	if err != nil {
 		return -1, err
@@ -520,7 +521,7 @@ type MempoolEntry struct {
 
 // GetMempoolAncestors If txid is in the mempool, returns all in-mempool ancestors summarized data.
 //     txID : The transaction id (must be in mempool)
-func (bic *blockchainIndexClient) GetMempoolAncestors(txID string) ([]string, error) {
+func (bic *BlockchainClient) GetMempoolAncestors(txID string) ([]string, error) {
 	response, err := bic.do("getmempoolancestors", txID, false)
 	if err != nil {
 		return nil, err
@@ -537,7 +538,7 @@ func (bic *blockchainIndexClient) GetMempoolAncestors(txID string) ([]string, er
 
 // GetMempoolAncestorsFull If txid is in the mempool, returns all in-mempool ancestors full data.
 //     txID : The transaction id (must be in mempool)
-func (bic *blockchainIndexClient) GetMempoolAncestorsFull(txID string) ([]*MempoolEntry, error) {
+func (bic *BlockchainClient) GetMempoolAncestorsFull(txID string) ([]*MempoolEntry, error) {
 	response, err := bic.do("getmempoolancestors", txID, true)
 	if err != nil {
 		return nil, err
@@ -554,7 +555,7 @@ func (bic *blockchainIndexClient) GetMempoolAncestorsFull(txID string) ([]*Mempo
 
 // GetMempoolDescendants If txid is in the mempool, returns all in-mempool Descendants summarized data.
 //     txID : The transaction id (must be in mempool)
-func (bic *blockchainIndexClient) GetMempoolDescendants(txID string) ([]string, error) {
+func (bic *BlockchainClient) GetMempoolDescendants(txID string) ([]string, error) {
 	response, err := bic.do("getmempooldescendants", txID, false)
 	if err != nil {
 		return nil, err
@@ -571,7 +572,7 @@ func (bic *blockchainIndexClient) GetMempoolDescendants(txID string) ([]string, 
 
 // GetMempoolDescendantsFull If txid is in the mempool, returns all in-mempool Descendants full data.
 //     txID : The transaction id (must be in mempool)
-func (bic *blockchainIndexClient) GetMempoolDescendantsFull(txID string) ([]*MempoolEntry, error) {
+func (bic *BlockchainClient) GetMempoolDescendantsFull(txID string) ([]*MempoolEntry, error) {
 	response, err := bic.do("getmempooldescendants", txID, true)
 	if err != nil {
 		return nil, err
@@ -588,7 +589,7 @@ func (bic *blockchainIndexClient) GetMempoolDescendantsFull(txID string) ([]*Mem
 
 // GetMempoolEntry returns full mempool data for given transaction.
 //     txID : The transaction id (must be in mempool).
-func (bic *blockchainIndexClient) GetMempoolEntry(txID string) (*MempoolEntry, error) {
+func (bic *BlockchainClient) GetMempoolEntry(txID string) (*MempoolEntry, error) {
 	response, err := bic.do("getmempoolentry", txID)
 	if err != nil {
 		return nil, err
@@ -617,7 +618,8 @@ type MempoolInfo struct {
 	MempoolMinFee float64 `json:"mempoolminfee,required"`
 }
 
-func (bic *blockchainIndexClient) GetMempoolInfo() (*MempoolInfo, error) {
+// GetMempoolInfo returns details on the active state of the TX memory pool.
+func (bic *BlockchainClient) GetMempoolInfo() (*MempoolInfo, error) {
 	response, err := bic.do("getmempoolinfo")
 	if err != nil {
 		return nil, err
@@ -635,7 +637,7 @@ func (bic *blockchainIndexClient) GetMempoolInfo() (*MempoolInfo, error) {
 // GetRawMempool returns all transaction ids in memory pool as array of string transaction ids.
 //
 //     HINT: use `getmempoolentry` to fetch a specific transaction from the mempool.
-func (bic *blockchainIndexClient) GetRawMempool() ([]string, error) {
+func (bic *BlockchainClient) GetRawMempool() ([]string, error) {
 	response, err := bic.do("getrawmempool", false)
 	if err != nil {
 		return nil, err
@@ -650,12 +652,12 @@ func (bic *blockchainIndexClient) GetRawMempool() ([]string, error) {
 	return rawpool, nil
 }
 
-// GetRawMempool returns all transaction ids in memory pool as array of objects.
+// GetRawMempoolFull returns all transaction ids in memory pool as array of objects.
 //
 //     HINT: use `getmempoolentry` to fetch a specific transaction from the mempool.
 //
 // Response type is a map [transactionID]MempoolEntry object.
-func (bic *blockchainIndexClient) GetRawMempoolFull() (map[string]*MempoolEntry, error) {
+func (bic *BlockchainClient) GetRawMempoolFull() (map[string]*MempoolEntry, error) {
 	response, err := bic.do("getrawmempool", true)
 	if err != nil {
 		return nil, err
@@ -700,7 +702,8 @@ type ScriptPubKey struct {
 	Addresses []string `json:"addresses,required"`
 }
 
-func (bic *blockchainIndexClient) GetTxOut(txID string, n uint64, includeMempool bool) (*TxOut, error) {
+// GetTxOut returns details about an unspent transaction output.
+func (bic *BlockchainClient) GetTxOut(txID string, n uint64, includeMempool bool) (*TxOut, error) {
 	response, err := bic.do("gettxout", txID, n, includeMempool)
 	if err != nil {
 		return nil, err
@@ -724,7 +727,7 @@ func (bic *blockchainIndexClient) GetTxOut(txID string, n uint64, includeMempool
 //            you need to maintain a transaction index, using the -txindex and -spentindex
 //            command line option or specify the block in which the transaction is included
 //            manually (by blockhash).
-func (bic *blockchainIndexClient) GetTxOutProof(txIDs []string) (string, error) {
+func (bic *BlockchainClient) GetTxOutProof(txIDs []string) (string, error) {
 	proof, err := bic.do("gettxoutproof", txIDs)
 	if err != nil {
 		return "", err
@@ -744,7 +747,7 @@ func (bic *blockchainIndexClient) GetTxOutProof(txIDs []string) (string, error) 
 //            you need to maintain a transaction index, using the -txindex command line
 //            option or specify the block in which the transaction is included manually
 //            (by blockhash).
-func (bic *blockchainIndexClient) GetTxOutProofInBlock(txIDs []string, blockHash string) (string, error) {
+func (bic *BlockchainClient) GetTxOutProofInBlock(txIDs []string, blockHash string) (string, error) {
 	proof, err := bic.do("gettxoutproof", txIDs, blockHash)
 	if err != nil {
 		return "", err
@@ -773,7 +776,7 @@ type TxOutSetInfo struct {
 
 // GetTxOutSetInfo returns statistics about the unspent transaction output set.
 //     NOTE : This call may take some time.
-func (bic *blockchainIndexClient) GetTxOutSetInfo() (*TxOutSetInfo, error) {
+func (bic *BlockchainClient) GetTxOutSetInfo() (*TxOutSetInfo, error) {
 	response, err := bic.do("gettxoutsetinfo")
 	if err != nil {
 		return nil, err
@@ -793,12 +796,12 @@ func (bic *blockchainIndexClient) GetTxOutSetInfo() (*TxOutSetInfo, error) {
 // A later preciousblock call can override the effect of an earlier one.
 //
 // The effects of preciousblock are not retained across restarts.
-func (bic *blockchainIndexClient) PreciousBlock(blockHash string) error {
+func (bic *BlockchainClient) PreciousBlock(blockHash string) error {
 	_, err := bic.do("preciousblock", blockHash)
 	return err
 }
 
-// PruneBlockchains prunes the blockchain up to the specified block height.
+// PruneBlockchain prunes the blockchain up to the specified block height.
 //
 // Returns the height of the last block pruned.
 //
@@ -806,7 +809,7 @@ func (bic *blockchainIndexClient) PreciousBlock(blockHash string) error {
 //                        to prune blocks whose block time is at least 2 hours
 //                        older than the provided timestamp.
 //
-func (bic *blockchainIndexClient) PruneBlockchain(heightOrTimestamp uint64) (uint64, error) {
+func (bic *BlockchainClient) PruneBlockchain(heightOrTimestamp uint64) (uint64, error) {
 	response, err := bic.do("pruneblockchain", heightOrTimestamp)
 	if err != nil {
 		return 0, err
@@ -821,7 +824,7 @@ func (bic *blockchainIndexClient) PruneBlockchain(heightOrTimestamp uint64) (uin
 }
 
 // SaveMempool dumps the mempool to disk. It will fail until the previous dump is fully loaded.
-func (bic *blockchainIndexClient) SaveMempool() error {
+func (bic *BlockchainClient) SaveMempool() error {
 	_, err := bic.do("savemempool")
 	return err
 }
@@ -830,7 +833,7 @@ func (bic *blockchainIndexClient) SaveMempool() error {
 //
 //     checkLevel : optional, 0-4, default=4 - How thorough the block verification is.
 //     nBlocks    : optional, default=6, 0=all - The number of blocks to check.
-func (bic *blockchainIndexClient) VerifyChain(checkLevel uint64, nBlocks uint64) (bool, error) {
+func (bic *BlockchainClient) VerifyChain(checkLevel uint64, nBlocks uint64) (bool, error) {
 	response, err := bic.do("verifychain", checkLevel, nBlocks)
 	if err != nil {
 		return false, err
@@ -849,7 +852,7 @@ func (bic *blockchainIndexClient) VerifyChain(checkLevel uint64, nBlocks uint64)
 // block is not in our best chain.
 //
 //     proof : The hex-encoded proof generated by `gettxoutproof`.
-func (bic *blockchainIndexClient) VerifyTxOutProof(proof string) ([]string, error) {
+func (bic *BlockchainClient) VerifyTxOutProof(proof string) ([]string, error) {
 	response, err := bic.do("verifytxoutproof", proof)
 	if err != nil {
 		return nil, err
