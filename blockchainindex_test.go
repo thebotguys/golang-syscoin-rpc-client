@@ -11,8 +11,10 @@ import (
 	syscoinrpc "github.com/thebotguys/golang-syscoin-rpc-client"
 )
 
+const invalidURL = "http://invalid.url"
+
 func init() {
-	http.DefaultClient.Timeout = time.Second * 5 // for quick tests, can be changed for more reliability.
+	http.DefaultClient.Timeout = time.Second * 1 // for quick tests, can be changed for more reliability.
 }
 
 var (
@@ -107,14 +109,6 @@ func TestGetBlockHashInvalid(t *testing.T) {
 	require.Error(t, err, "Must error on any method with invalid URL")
 }
 
-func TestGetBlockHashesInvalid(t *testing.T) {
-	cl, err := syscoinrpc.NewClient(invalidURL, "", "")
-	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
-
-	_, err = cl.BlockchainIndex.GetBlockHashes(0, 0)
-	require.Error(t, err, "Must error on any method with invalid URL")
-}
-
 func TestGetBlockHeaderInvalid(t *testing.T) {
 	cl, err := syscoinrpc.NewClient(invalidURL, "", "")
 	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
@@ -128,16 +122,11 @@ func TestGetBlockHeaderInvalid(t *testing.T) {
 	require.Error(t, err, "Must error on any method with invalid URL")
 }
 
-func TestGetBlockHeadersInvalid(t *testing.T) {
+func TestGetAllBlockStatsInvalid(t *testing.T) {
 	cl, err := syscoinrpc.NewClient(invalidURL, "", "")
 	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
 
-	testBlockHash := "9f362bce7390fb38dfa0f98c11fb9a5158aeb280f29c8f6cb5ef43d916173bf1"
-
-	_, err = cl.BlockchainIndex.GetBlockHeaders(testBlockHash, 1)
-	require.Error(t, err, "Must error on any method with invalid URL")
-
-	_, err = cl.BlockchainIndex.GetFullBlockHeaders(testBlockHash, 1)
+	_, err = cl.BlockchainIndex.GetAllBlockStats("")
 	require.Error(t, err, "Must error on any method with invalid URL")
 }
 
@@ -145,7 +134,15 @@ func TestGetChainTipsInvalid(t *testing.T) {
 	cl, err := syscoinrpc.NewClient(invalidURL, "", "")
 	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
 
-	_, err = cl.BlockchainIndex.GetChainTips(1, 0)
+	_, err = cl.BlockchainIndex.GetChainTips()
+	require.Error(t, err, "Must error on any method with invalid URL")
+}
+
+func TestGetChainTxStatsInvalid(t *testing.T) {
+	cl, err := syscoinrpc.NewClient(invalidURL, "", "")
+	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
+
+	_, err = cl.BlockchainIndex.GetChainTxStats(0, "")
 	require.Error(t, err, "Must error on any method with invalid URL")
 }
 
@@ -206,14 +203,6 @@ func TestGetRawMempoolInvalid(t *testing.T) {
 	require.Error(t, err, "Must error on any method with invalid URL")
 }
 
-func TestGetSpentInfoInvalid(t *testing.T) {
-	cl, err := syscoinrpc.NewClient(invalidURL, "", "")
-	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
-
-	_, err = cl.BlockchainIndex.GetSpentInfo("", 0)
-	require.Error(t, err, "Must error on any method with invalid URL")
-}
-
 func TestGetTxOutInvalid(t *testing.T) {
 	cl, err := syscoinrpc.NewClient(invalidURL, "", "")
 	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
@@ -254,6 +243,14 @@ func TestPruneBlockchainInvalid(t *testing.T) {
 	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
 
 	_, err = cl.BlockchainIndex.PruneBlockchain(uint64(1))
+	require.Error(t, err, "Must error on any method with invalid URL")
+}
+
+func TestSaveMempoolInvalid(t *testing.T) {
+	cl, err := syscoinrpc.NewClient(invalidURL, "", "")
+	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
+
+	err = cl.BlockchainIndex.SaveMempool()
 	require.Error(t, err, "Must error on any method with invalid URL")
 }
 
@@ -336,20 +333,6 @@ func TestGetBlockHashOK(t *testing.T) {
 	t.Log("Block Hash:", hash)
 }
 
-func TestGetBlockHashesOK(t *testing.T) {
-	cl, err := syscoinrpc.NewClient(syscoinrpc.LocalNodeURL, os.Getenv("RPC_USER"), os.Getenv("RPC_PASSWORD"))
-	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
-
-	testHigh := uint64(1231614698)
-	testLow := uint64(1231024505)
-
-	hashes, err := cl.BlockchainIndex.GetBlockHashes(testHigh, testLow)
-	require.Error(t, err, "GetBlockHashes: This function has an expected bug, this error will come out when it will be fixed")
-	//require.NoError(t, err, "GetBlockHashes: Must not error on valid URL, check if the node is running")
-
-	t.Log("Block Hashes:", hashes)
-}
-
 func TestGetBlockHeaderOK(t *testing.T) {
 	cl, err := syscoinrpc.NewClient(syscoinrpc.LocalNodeURL, os.Getenv("RPC_USER"), os.Getenv("RPC_PASSWORD"))
 	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
@@ -370,34 +353,36 @@ func TestGetBlockHeaderOK(t *testing.T) {
 	require.Equal(t, expectedBlockHeader, *fullBlockHeader, "Must be equal to test block header")
 }
 
-func TestGetBlockHeadersOK(t *testing.T) {
+func TestGetAllBlockStatsOK(t *testing.T) {
 	cl, err := syscoinrpc.NewClient(syscoinrpc.LocalNodeURL, os.Getenv("RPC_USER"), os.Getenv("RPC_PASSWORD"))
 	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
 
-	testBlockHash := "9f362bce7390fb38dfa0f98c11fb9a5158aeb280f29c8f6cb5ef43d916173bf1"
+	hash := "dead1f156254f1d723b043a0b7ff2cbc4735c87b1852b5d829f85e8f8796f773"
 
-	headers, err := cl.BlockchainIndex.GetBlockHeaders(testBlockHash, 1)
-	require.NoError(t, err, "GetBlockHeaders: Must not error on valid URL, check if the node is running")
+	stats, err := cl.BlockchainIndex.GetAllBlockStats(hash)
+	require.NoError(t, err, "GetAllBlockStats: must not error")
 
-	t.Log("Test Block Headers:", headers)
-
-	expectedBlockHeader := []*syscoinrpc.FullBlockHeader{&testBlockHeader}
-
-	fullBlockHeaders, err := cl.BlockchainIndex.GetFullBlockHeaders(testBlockHash, 1)
-	require.NoError(t, err, "GetFullBlockHeaders: Must not error on valid URL, check if the node is running")
-
-	fullBlockHeaders[0].Confirmations = 0
-	require.EqualValues(t, expectedBlockHeader, fullBlockHeaders, "Must be equal to test block header")
+	t.Log("GetAllBlockStats:", stats)
 }
 
 func TestGetChainTipsOK(t *testing.T) {
 	cl, err := syscoinrpc.NewClient(syscoinrpc.LocalNodeURL, os.Getenv("RPC_USER"), os.Getenv("RPC_PASSWORD"))
 	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
 
-	tips, err := cl.BlockchainIndex.GetChainTips(1, 0)
-	require.NoError(t, err, "GetBlockHeader: Must not error on valid URL, check if the node is running")
+	tips, err := cl.BlockchainIndex.GetChainTips()
+	require.NoError(t, err, "GetChainTips: Must not error on valid URL, check if the node is running")
 
 	t.Log("Test Chain Tips:", tips)
+}
+
+func TestGetChainTxStatsOK(t *testing.T) {
+	cl, err := syscoinrpc.NewClient(syscoinrpc.LocalNodeURL, os.Getenv("RPC_USER"), os.Getenv("RPC_PASSWORD"))
+	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
+
+	stats, err := cl.BlockchainIndex.GetChainTxStats(0, "")
+	require.NoError(t, err, "GetChainTxStats: Must not error on valid URL, check if the node is running")
+
+	t.Log("ChainTxStats:", stats)
 }
 
 func TestGetDifficultyOK(t *testing.T) {
@@ -469,19 +454,6 @@ func TestGetRawMempoolOK(t *testing.T) {
 	t.Log("GetRawMempoolFull :", rawPoolFull)
 }
 
-func TestGetSpentInfoOK(t *testing.T) {
-	cl, err := syscoinrpc.NewClient(syscoinrpc.LocalNodeURL, os.Getenv("RPC_USER"), os.Getenv("RPC_PASSWORD"))
-	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
-
-	txID := "0437cd7f8525ceed2324359c2d0ba26006d92d856a9c20fa0241106ee5a597c9"
-	index := uint64(0)
-
-	spentInfo, err := cl.BlockchainIndex.GetSpentInfo(txID, index)
-	require.NoError(t, err, "GetSpentInfo : must not error")
-
-	t.Log("GetSpentInfo :", spentInfo)
-}
-
 func TestGetTxOutOK(t *testing.T) {
 	cl, err := syscoinrpc.NewClient(syscoinrpc.LocalNodeURL, os.Getenv("RPC_USER"), os.Getenv("RPC_PASSWORD"))
 	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
@@ -550,6 +522,16 @@ func TestPruneBlockchainOK(t *testing.T) {
 
 	_, err = cl.BlockchainIndex.PruneBlockchain(testTimestamp)
 	require.NoError(t, err, "PruneBlockchain: must not error")
+}
+
+func TestSaveMempoolOK(t *testing.T) {
+	cl, err := syscoinrpc.NewClient(syscoinrpc.LocalNodeURL, os.Getenv("RPC_USER"), os.Getenv("RPC_PASSWORD"))
+	require.NoError(t, err, "Must have no error on creation, even with invalid URL")
+
+	t.Skip("This call would alter the node, so for this tests is skipped, remove the skip instruction to do it anyway")
+
+	err = cl.BlockchainIndex.SaveMempool()
+	require.NoError(t, err, "SaveMempool: must not error")
 }
 
 func TestVerifyChainOK(t *testing.T) {

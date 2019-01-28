@@ -57,54 +57,47 @@ Full Reference is available at [https://syscoin.readme.io/v3.2.0/reference](http
 
 ## Currently Implemented commands
 
-### Addressindex commands (require -addressindex enabled on rpc server)
-
-- [x] `getaddressbalance`
-- [x] `getaddressdeltas`
-- [x] `getaddressmempool`
-- [x] `getaddresstxids`
-- [x] `getaddressutxos`
-
-### Blockchainindex commands (require -blockchainindex enabled on rpc server)
+### Blockchain
 
 - [x] `getbestblockhash`
 - [x] `getblock`
 - [x] `getblockchaininfo`
 - [x] `getblockcount`
 - [x] `getblockhash`
-- [x] `getblockhashes`
 - [x] `getblockheader`
-- [x] `getblockheaders`
+- [x] `getblockstats`
 - [x] `getchaintips`
+- [x] `getchaintxstats`
 - [x] `getdifficulty`
 - [x] `getmempoolancestors`
 - [x] `getmempooldescendants`
 - [x] `getmempoolentry`
 - [x] `getmempoolinfo`
 - [x] `getrawmempool`
-- [x] `getspentinfo`
 - [x] `gettxout`
 - [x] `gettxoutproof`
 - [x] `gettxoutsetinfo`
 - [x] `preciousblock`
 - [x] `pruneblockchain`
+- [x] `savemempool`
+- [ ] `scantxoutset` NOT IMPLEMENTED : EXPERIMENTAL warning: this call may be removed or changed in future releases.
 - [x] `verifychain`
 - [x] `verifytxoutproof`
 
-### Control commands
+### Control
 
-- [x] `debug`
-- [x] `help`
-- [ ] `getinfo` (**DEPRECATED, NOT IMPLEMENTED**)
 - [x] `getmemoryinfo`
+- [x] `help`
+- [x] `logging`
 - [x] `stop`
+- [x] `uptime`
 
-### Generating commands
+### Generating
 
 - [x] `generate`
 - [x] `generatetoaddress`
 
-### Mining commands
+### Mining
 
 - [ ] `createauxblock`
 - [ ] `getauxblock`

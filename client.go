@@ -7,7 +7,7 @@ import (
 
 const (
 	// LocalNodeURL represents a valid testnet node URL.
-	LocalNodeURL string = "http://127.0.0.1:8368"
+	LocalNodeURL string = "http://127.0.0.1:8370"
 )
 
 // Client represents a syscoin JSON-RPC over HTTP client.
@@ -16,7 +16,6 @@ type Client struct {
 	user            string                 // The RPC Username.
 	pass            string                 // The RPC Password.
 	httpClient      *http.Client           // The JSON-RPC over HTTP sub client.
-	AddressIndex    *addressIndexClient    // The client of `addressindex` calls.
 	BlockchainIndex *blockchainIndexClient // The client of `blockchaindex` calls.
 	Control         *controlClient         // The client of `control` calls.
 	Generating      *generatingClient      // The client of `generating` calls.
@@ -31,7 +30,6 @@ func NewClient(url string, rpcUser string, rpcPassword string) (*Client, error) 
 		httpClient: http.DefaultClient,
 	}
 
-	cl.AddressIndex = &addressIndexClient{cl}
 	cl.BlockchainIndex = &blockchainIndexClient{cl}
 	cl.Control = &controlClient{cl}
 	cl.Generating = &generatingClient{cl}
