@@ -1,6 +1,8 @@
 # Golang Syscoin JSON RPC Client
 
 [![Build Status](https://travis-ci.org/thebotguys/golang-syscoin-rpc-client.svg?branch=master)](https://travis-ci.org/thebotguys/golang-syscoin-rpc-client)
+[![Godoc](https://godoc.org/thebotguys/golang-syscoin-rpc-client?status.svg)](https://godoc.org/thebotguys/golang-syscoin-rpc-client)
+[![Goreportcard](https://goreportcard.com/badge/github.com/thebotguys/golang-syscoin-rpc-client)](https://goreportcard.com/report/github.com/thebotguys/golang-syscoin-rpc-client)
 
 **IMPORTANT: THIS IS A WORK IN PROGRESS AND NOT READY FOR PRODUCTION!**
 
@@ -99,9 +101,9 @@ Full Reference is available at [https://syscoin.readme.io/v3.2.0/reference](http
 
 ### Mining
 
-- [ ] `createauxblock`
-- [ ] `getauxblock`
-- [ ] `getblocktemplate`
+- [x] `createauxblock`
+- [x] `getauxblock`
+- [x] `getblocktemplate`
 - [ ] `getmininginfo`
 - [ ] `getnetworkhashps`
 - [ ] `prioritisetransaction`
@@ -161,4 +163,4 @@ Full Reference is available at [https://syscoin.readme.io/v3.2.0/reference](http
 
 ### Wallet commands
 
-#### TBD
+#### TBD (60 functions)

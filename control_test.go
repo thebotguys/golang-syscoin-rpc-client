@@ -78,7 +78,7 @@ func TestLoggingOK(t *testing.T) {
 	require.NoError(t, err, "Loggings - include + exclude: must not error")
 	t.Log("Loggings - include + exclude:", loggings)
 
-	loggings, err = cl.Control.Logging(nil, excludes)
+	_, err = cl.Control.Logging(nil, excludes)
 	require.EqualError(t, err, syscoinrpc.ErrLoggingFilters.Error(), "Loggings - only exclude: must error")
 }
 
