@@ -14,7 +14,7 @@ import (
 const invalidURL = "http://invalid.url"
 
 func init() {
-	http.DefaultClient.Timeout = time.Second * 1 // for quick tests, can be changed for more reliability.
+	http.DefaultClient.Timeout = time.Second * 5 // for quick tests, can be changed for more reliability.
 }
 
 var (

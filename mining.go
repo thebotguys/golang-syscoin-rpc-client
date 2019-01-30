@@ -3,6 +3,7 @@ package syscoinrpc
 import (
 	"encoding/json"
 	"errors"
+	"strconv"
 )
 
 // MiningClient wraps all `mining` related functions.
@@ -225,4 +226,108 @@ func (mc *MiningClient) GetBlockTemplate(Mode string, Capabilities []string, Rul
 	}
 
 	return &template, nil
+}
+
+// MiningInfo represents general mining information.
+type MiningInfo struct {
+	// BlockNumber is the current block number.
+	BlockNumber uint64 `json:"blocks,required"`
+	// CurrentBlockWeight is the last weight of the current block.
+	CurrentBlockWeight uint64 `json:"currentblockweight,required"`
+	// CurrentBlockTx is the last transaction of the current block.
+	CurrentBlockTx uint64 `json:"currentblocktx,required"`
+	// Difficulty is the current difficulty.
+	Difficulty uint64 `json:"difficulty,required"`
+	// NetworkHashps is the network hashes per second.
+	NetworkHashps uint64 `json:"networkhashps,required"`
+	// PooledTransactions is the size of the mempool.
+	PooledTransactions uint64 `json:"pooledtx,required"`
+	// Chain is the current network name as defined in BIP70
+	// (main, test, regtest).
+	Chain string `json:"chain,required"`
+	// Warnings represents any network and blockchain warnings.
+	Warnings string `json:"warnings,required"`
+}
+
+// GetMiningInfo returns mining-related information.
+func (mc *MiningClient) GetMiningInfo() (*MiningInfo, error) {
+	response, err := mc.do("getmininginfo")
+	if err != nil {
+		return nil, err
+	}
+
+	var info MiningInfo
+	err = json.Unmarshal(response, &info)
+	if err != nil {
+		return nil, err
+	}
+
+	return &info, nil
+}
+
+// GetNetworkHashps returns the estimated network hashes per second based on the last n blocks.
+//
+// Pass in [blocks] to override # of blocks, -1 specifies since last difficulty change.
+// Pass in [height] to estimate the network speed at the time when a certain block was found.
+func (mc *MiningClient) GetNetworkHashps(nBlocks int64, height int64) (uint64, error) {
+	if nBlocks == 0 {
+		nBlocks = 120
+	}
+	if height == 0 {
+		height = -1
+	}
+
+	response, err := mc.do("getnetworkhashps", nBlocks, height)
+	if err != nil {
+		return 0, err
+	}
+
+	hashps, err := strconv.ParseUint(string(response), 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return hashps, nil
+}
+
+// PrioritiseTransaction accepts the transaction into mined blocks at a higher
+// (or lower) priority.
+//
+//    "txid"    : The transaction id.
+//    fee_delta : The fee value (in satoshis) to add (or subtract, if negative).
+//
+// Note, that this value is not a fee rate. It is a value to modify absolute fee of the TX.
+//
+// The fee is not actually paid, only the algorithm for selecting transactions into a block
+// considers the transaction as it would have paid a higher (or lower) fee.
+func (mc *MiningClient) PrioritiseTransaction(txID string, FeeDelta int64) error {
+	_, err := mc.do("prioritisetransaction", txID, 0, FeeDelta)
+	return err
+}
+
+// SubmitAuxBlock submits a solved auxpow for a previously block created by
+// `createauxblock`.
+func (mc *MiningClient) SubmitAuxBlock(hash string, auxPow string) error {
+	response, err := mc.do("submitauxblock", hash, auxPow)
+	if err != nil {
+		return err
+	}
+
+	submitted, err := strconv.ParseBool(string(response))
+	if err != nil {
+		return err
+	}
+	if submitted == false {
+		return errors.New("Block was not submitted successfully")
+	}
+
+	return nil
+}
+
+// SubmitBlock attempts to submit new block to network.
+//
+// See https://en.syscoin.it/wiki/BIP_0022 for full specification.
+func (mc *MiningClient) SubmitBlock(hexData string) error {
+	_, err := mc.do("submitblock", hexData)
+	return err
 }

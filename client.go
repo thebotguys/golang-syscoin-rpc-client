@@ -20,6 +20,7 @@ type Client struct {
 	Control    *ControlClient    // The client of `control` calls.
 	Generating *GeneratingClient // The client of `generating` calls.
 	Mining     *MiningClient     // The client of `mining` calls.
+	Network    *NetworkClient    // The client of `network` calls.
 }
 
 // NewClient creates a new client object.
@@ -35,6 +36,7 @@ func NewClient(url string, rpcUser string, rpcPassword string) (*Client, error) 
 	cl.Control = &ControlClient{cl}
 	cl.Generating = &GeneratingClient{cl}
 	cl.Mining = &MiningClient{cl}
+	cl.Network = &NetworkClient{cl}
 
 	return cl, nil
 }
