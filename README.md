@@ -112,15 +112,15 @@ func main() {
 - [x] `addnode`
 - [x] `clearbanned`
 - [x] `disconnectnode`
-- [-] `getaddednodeinfo`
-- [ ] `getconnectioncount`
-- [ ] `getnettotals`
-- [ ] `getnetworkinfo`
-- [ ] `getpeerinfo`
-- [ ] `listbanned`
-- [ ] `ping`
-- [ ] `setban`
-- [ ] `setnetworkactive`
+- [x] `getaddednodeinfo`
+- [x] `getconnectioncount`
+- [x] `getnettotals`
+- [x] `getnetworkinfo`
+- [x] `getpeerinfo`
+- [x] `listbanned`
+- [x] `ping`
+- [x] `setban`
+- [x] `setnetworkactive`
 
 ### RawTransaction commands
 
