@@ -124,40 +124,70 @@ func main() {
 
 ### RawTransaction commands
 
+- [ ] `combinepsbt`
+- [ ] `combinerawtransaction`
+- [ ] `converttopsbt`
+- [ ] `createpsbt`
 - [ ] `createrawtransaction`
+- [ ] `decodepsbt`
 - [ ] `decoderawtransaction`
 - [ ] `decodescript`
+- [ ] `finalizepsbt`
 - [ ] `fundrawtransaction`
 - [ ] `getrawtransaction`
 - [ ] `sendrawtransaction`
 - [ ] `signrawtransaction`
+- [ ] `signrawtransactionwithkey`
+- [ ] `testmempoolaccept`
 
 ### Syscoin commands
 
-- [ ] `getgovernanceinfo`
-- [ ] `getpoolinfo`
+- [ ] `addressbalance`
+- [ ] `assetallocationburn`
+- [ ] `assetallocationinfo`
+- [ ] `assetallocationmint`
+- [ ] `assetallocationsend`
+- [ ] `assetallocationsenderstatus`
+- [ ] `assetinfo`
+- [ ] `assetnew`
+- [ ] `assetsend`
+- [ ] `assettransfer`
+- [ ] `assetupdate`
+- [x] `getgovernanceinfo`
 - [ ] `getsuperblockbudget`
 - [ ] `gobject`
-- [ ] `masternode`
-- [ ] `masternodebroadcast`
-- [ ] `masternodelist`
+- [ ] `listassetallocationmempoolbalances`
+- [ ] `listassetallocations`
+- [ ] `listassetallocationtransactions`
+- [ ] `listassets`
 - [ ] `mnsync`
-- [ ] `privatesend`
-- [ ] `sentinelping`
 - [ ] `spork`
+- [ ] `syscoinaddscript`
+- [ ] `syscoinburn`
+- [ ] `syscoindecoderawtransaction`
+- [ ] `syscoinlistreceivedbyaddress`
+- [ ] `syscoinmint`
+- [ ] `syscoinsetethheaders`
+- [ ] `syscoinsetethstatus`
+- [ ] `syscointxfund`
+- [ ] `tpstestadd`
+- [ ] `tpstestinfo`
+- [ ] `tpstestsetenabled`
 - [ ] `voteraw`
-
+  
 ### Util commands
 
 - [ ] `createmultisig`
 - [ ] `estimatefee`
-- [ ] `estimatepriority`
 - [ ] `estimatesmartfee`
-- [ ] `estimatesmartpriority`
 - [ ] `signmessagewithprivkey`
 - [ ] `validateaddress`
 - [ ] `verifymessage`
 
 ### Wallet commands
 
-#### TBD (60 functions)
+***TBD***
+
+### ZMQ commands
+
+- [ ] `getzmqnotifications`
