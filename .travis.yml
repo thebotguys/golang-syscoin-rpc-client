@@ -5,10 +5,17 @@ go:
   - "1.x"
   - "1.11.x"
 
-before_install: go get -t ./...
 go_import_path: github.com/thebotguys/golang-syscoin-rpc-client
-
 sudo: false
+
+env:
+  - GO111MODULE=on
+  - GOPATH=/home/travis/gopath/.cache
+
+cache:
+  directories:
+    - /home/travis/gopath/.cache
+    
 script:
  - go build
  - go test -v ./...
