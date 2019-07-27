@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/twinj/uuid"
+	"github.com/gofrs/uuid"
 )
 
 // jsonRPCrequest represents a generic JSON RPC request.
@@ -37,12 +37,17 @@ func (err *errorMessage) Error() string {
 //     url   : The endpoint url.
 //     method: The name of the method which is going to be called.
 //     params: The JSON object representing all the params.
-func (c *Client) do(method string, params ...interface{} /*json.Marshaler*/) (json.RawMessage, error) {
+func (c *Client) do(method string, params ...interface{}) (json.RawMessage, error) {
+	requestID, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
+
 	jsonReq := jsonRPCrequest{
 		JSONRpcVersion: "1.0",
 		Method:         method,
 		Params:         params,
-		ID:             uuid.NewV4().String(),
+		ID:             requestID.String(),
 	}
 
 	reqBody, err := json.Marshal(jsonReq)
