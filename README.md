@@ -53,7 +53,7 @@ func main() {
 
 ## Additional Notes
 
-Full Reference is available at [https://syscoin.readme.io/v3.2.0/reference](https://syscoin.readme.io/v3.2.0/reference).
+Full Reference is available at [https://syscoin.readme.io/reference](https://syscoin.readme.io/reference).
 
 ## Currently Implemented commands
 
